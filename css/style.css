@@ -246,7 +246,7 @@ button, input, select, textarea {
   flex-shrink: 0;
 }
 .nav-logo-mark {
-  width: 46px; height: 46px;
+  width: 100px; height: 100px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
