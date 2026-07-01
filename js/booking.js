@@ -20,7 +20,16 @@
  *    No API key needed for basic wa.me redirect.
  *    For full Business API (Twilio), add TWILIO_WHATSAPP_URL below.
  */
-
+  // Helper function to escape HTML string inputs and prevent XSS injections
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 const BOOKING_CONFIG = {
   // ─── EmailJS ───────────────────────────────────────────────────────
   emailjs: {
@@ -546,9 +555,12 @@ function renderConfirmSummary() {
     s.time ? { label: 'Time', value: s.time } : null,
     { label: 'Fee', value: s.type === 'video' ? '₹800' : (s.location?.fee || '₹800') },
   ].filter(Boolean);
-  document.getElementById('confirmSummaryRows').innerHTML = rows.map(r =>
-    `<div class="summary-row"><span class="summary-label">${r.label}</span><span class="summary-value">${r.value}</span></div>`
-  ).join('');
+  document.getElementById('confirmSummaryRows').innerHTML = rows.map(r => 
+  `<div class="summary-row">
+    <span class="summary-label">${r.label}</span>
+    <span class="summary-value">${escapeHTML(r.value)}</span>
+  </div>`
+).join('');
 }
 
 // ─── CONFIRM & SUBMIT ─────────────────────────────────────────────────────
