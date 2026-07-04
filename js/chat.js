@@ -27,7 +27,7 @@ Your role is to:
 CLINIC FACTS:
 - Primary clinic: A 128, Gali No 8, Sai Chowk, Madhu Vihar, IP Extension, Patparganj, New Delhi 110092
 - Phone: +91-9899416040
-- Timings: Mon–Sat 12:00 PM–2:00 PM and 6:00–8:30 PM; Sunday 12:00 PM–2:00 PM
+- Timings: Mon–Sat 12:00 PM–2:00 PM and 6:00–8:30 PM; Sunday 12:00 PM–2:00 PM only
 - Fee: ₹800 at primary clinic, ₹1000 at hospital OPDs
 - Video consultations available
 - Also available at: Pushpanjali Hospital (Karkardooma, Wed & Sat), Femmenest (Mon & Thu), Max Super Speciality Hospital (Tue & Sun)
