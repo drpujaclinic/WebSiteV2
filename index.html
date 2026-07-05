@@ -174,13 +174,13 @@
   <!-- Mobile menu -->
   <div class="mobile-menu" id="mobileMenu" role="dialog" aria-label="Mobile navigation">
     <nav aria-label="Mobile navigation links">
-      <a href="#home" onclick="showPage('home');toggleMobileMenu();return false;">Home</a>
-      <a href="#about" onclick="showPage('about');toggleMobileMenu();return false;">About Dr. Puja</a>
-      <a href="#services" onclick="showPage('services');toggleMobileMenu();return false;">Services</a>
-      <a href="#facilities" onclick="showPage('facilities');toggleMobileMenu();return false;">Facilities</a>
-      <a href="#locations" onclick="showPage('locations');toggleMobileMenu();return false;">Locations &amp; Timings</a>
-      <a href="#blog" onclick="showPage('blog');toggleMobileMenu();return false;">Patient Blog</a>
-      <a href="#contact" onclick="showPage('contact');toggleMobileMenu();return false;">Contact</a>
+      <a href="#home" onclick="showPage('home');return false;">Home</a>
+      <a href="#about" onclick="showPage('about');return false;">About Dr. Puja</a>
+      <a href="#services" onclick="showPage('services');return false;">Services</a>
+      <a href="#facilities" onclick="showPage('facilities');return false;">Facilities</a>
+      <a href="#locations" onclick="showPage('locations');return false;">Locations &amp; Timings</a>
+      <a href="#blog" onclick="showPage('blog');return false;">Patient Blog</a>
+      <a href="#contact" onclick="showPage('contact');return false;">Contact</a>
     </nav>
     <div class="mobile-menu-divider"></div>
     <div class="mobile-menu-cta">
@@ -1027,7 +1027,7 @@
 
           <span class="eyebrow">Associated Locations</span>
           <h2 class="section-title" style="font-size:28px;margin-bottom:24px;">More Ways to See Dr. Puja</h2>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+          <div class="assoc-locations-grid">
 
             <div class="location-card">
               <span class="location-badge-pill pill-secondary">Hospital OPD</span>
