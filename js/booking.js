@@ -41,32 +41,32 @@
 function escapeHTML(str) {
   if (str === null || str === undefined) return '';
   return String(str)
-    .replace(/&/g,  '&amp;')
-    .replace(/</g,  '&lt;')
-    .replace(/>/g,  '&gt;')
-    .replace(/"/g,  '&quot;')
-    .replace(/'/g,  '&#039;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const BOOKING_CONFIG = {
 
   emailjs: {
-    publicKey:  'YOUR_EMAILJS_PUBLIC_KEY',   // ← paste
-    serviceId:  'YOUR_EMAILJS_SERVICE_ID',    // ← paste
+    publicKey: 'YOUR_EMAILJS_PUBLIC_KEY',   // ← paste
+    serviceId: 'YOUR_EMAILJS_SERVICE_ID',    // ← paste
     templateId: 'YOUR_EMAILJS_TEMPLATE_ID',   // ← paste
     enabled: false,
   },
 
   googleCalendar: {
-    clientId:   'YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com',
+    clientId: 'YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com',
     calendarId: 'drpujasclinic@gmail.com',
-    apiKey:     'YOUR_GOOGLE_API_KEY',
+    apiKey: 'YOUR_GOOGLE_API_KEY',
     enabled: false,
   },
 
   backend: {
-    url:     'YOUR_APPS_SCRIPT_WEB_APP_URL', // ← paste after deployment
+    url: 'YOUR_APPS_SCRIPT_WEB_APP_URL', // ← paste after deployment
     enabled: false,
   },
 
@@ -81,12 +81,12 @@ const BOOKING_CONFIG = {
 
   whatsapp: {
     patientPhone: '919899416040',
-    doctorPhone:  '919899416040', // clinic's own number for doctor notifications
+    doctorPhone: '919899416040', // clinic's own number for doctor notifications
     enabled: true,
   },
 
   clinic: {
-    name:  "Dr. Puja's Clinic",
+    name: "Dr. Puja's Clinic",
     email: 'drpujasclinic@gmail.com',
     phone: '+91-9899416040',
   },
@@ -107,15 +107,15 @@ const LOCATIONS = [
       // Mon–Sat has both morning (noon) and evening sessions.
       // Sunday: noon session only — no evening.
       weekday: {
-        morning: ['12:00 PM','12:15 PM','12:30 PM','12:45 PM',
-                  '01:00 PM','01:15 PM','01:30 PM','01:45 PM'],
-        evening: ['06:00 PM','06:15 PM','06:30 PM','06:45 PM',
-                  '07:00 PM','07:15 PM','07:30 PM','07:45 PM',
-                  '08:00 PM','08:15 PM'],
+        morning: ['12:00 PM', '12:15 PM', '12:30 PM', '12:45 PM',
+          '01:00 PM', '01:15 PM', '01:30 PM', '01:45 PM'],
+        evening: ['06:00 PM', '06:15 PM', '06:30 PM', '06:45 PM',
+          '07:00 PM', '07:15 PM', '07:30 PM', '07:45 PM',
+          '08:00 PM', '08:15 PM'],
       },
       sunday: {
-        morning: ['12:00 PM','12:15 PM','12:30 PM','12:45 PM',
-                  '01:00 PM','01:15 PM','01:30 PM','01:45 PM'],
+        morning: ['12:00 PM', '12:15 PM', '12:30 PM', '12:45 PM',
+          '01:00 PM', '01:15 PM', '01:30 PM', '01:45 PM'],
         evening: [],
       },
     },
@@ -129,8 +129,8 @@ const LOCATIONS = [
     days: 'Wed & Sat · 10 AM–12 PM',
     openDays: [3, 6], // Wed, Sat
     slots: {
-      morning: ['10:00 AM','10:15 AM','10:30 AM','10:45 AM',
-                '11:00 AM','11:15 AM','11:30 AM','11:45 AM'],
+      morning: ['10:00 AM', '10:15 AM', '10:30 AM', '10:45 AM',
+        '11:00 AM', '11:15 AM', '11:30 AM', '11:45 AM'],
       evening: [],
     },
   },
@@ -143,10 +143,10 @@ const LOCATIONS = [
     days: 'Tue 2–4 PM · Sun 9–11 AM',
     openDays: [0, 2], // Sun, Tue
     slots: {
-      morning: ['09:00 AM','09:15 AM','09:30 AM','09:45 AM',
-                '10:00 AM','10:15 AM','10:30 AM','10:45 AM'],
-      evening: ['02:00 PM','02:15 PM','02:30 PM','02:45 PM',
-                '03:00 PM','03:15 PM','03:30 PM','03:45 PM'],
+      morning: ['09:00 AM', '09:15 AM', '09:30 AM', '09:45 AM',
+        '10:00 AM', '10:15 AM', '10:30 AM', '10:45 AM'],
+      evening: ['02:00 PM', '02:15 PM', '02:30 PM', '02:45 PM',
+        '03:00 PM', '03:15 PM', '03:30 PM', '03:45 PM'],
     },
   },
   {
@@ -158,8 +158,8 @@ const LOCATIONS = [
     days: 'Mon & Thu · 9–11 AM',
     openDays: [1, 4], // Mon, Thu
     slots: {
-      morning: ['09:00 AM','09:15 AM','09:30 AM','09:45 AM',
-                '10:00 AM','10:15 AM','10:30 AM','10:45 AM'],
+      morning: ['09:00 AM', '09:15 AM', '09:30 AM', '09:45 AM',
+        '10:00 AM', '10:15 AM', '10:30 AM', '10:45 AM'],
       evening: [],
     },
   },
@@ -167,15 +167,15 @@ const LOCATIONS = [
 
 // ── BOOKING STATE ─────────────────────────────────────────────────────────────
 let bookingState = {
-  type:      null,   // 'clinic' | 'video'
-  location:  null,   // LOCATIONS entry
-  date:      null,   // 'YYYY-MM-DD'
-  time:      null,   // '12:00 PM'
-  name:      '',
-  phone:     '',
-  email:     '',
-  reason:    '',
-  step:      1,
+  type: null,   // 'clinic' | 'video'
+  location: null,   // LOCATIONS entry
+  date: null,   // 'YYYY-MM-DD'
+  time: null,   // '12:00 PM'
+  name: '',
+  phone: '',
+  email: '',
+  reason: '',
+  step: 1,
   isLoading: false,
 };
 
@@ -201,7 +201,7 @@ function openBooking(locationId) {
     const loc = LOCATIONS.find(l => l.id === locationId);
     if (loc) {
       // Came from Locations page — pre-fill location, skip to date/time
-      bookingState.type     = 'clinic';
+      bookingState.type = 'clinic';
       bookingState.location = loc;
       renderStep(3);
       return;
@@ -247,13 +247,13 @@ function renderStep(step) {
 
 function updateStepIndicator(activeStep) {
   for (let i = 1; i <= 4; i++) {
-    const dot  = document.getElementById('stepDot'  + i);
+    const dot = document.getElementById('stepDot' + i);
     const line = document.getElementById('stepLine' + i);
     if (!dot) continue;
     dot.className = 'step-dot';
-    if (i < activeStep)      { dot.classList.add('done');   dot.textContent = ''; }
-    else if (i === activeStep){ dot.classList.add('active'); dot.textContent = i; }
-    else                      { dot.textContent = i; }
+    if (i < activeStep) { dot.classList.add('done'); dot.textContent = ''; }
+    else if (i === activeStep) { dot.classList.add('active'); dot.textContent = i; }
+    else { dot.textContent = i; }
     if (line) line.className = 'step-line' + (i < activeStep ? ' done' : '');
   }
 }
@@ -296,14 +296,22 @@ function goStep1Next() {
 // ── STEP 2: LOCATION ──────────────────────────────────────────────────────────
 function renderLocationStep() {
   const container = document.getElementById('locationOptionsList');
-  container.innerHTML = LOCATIONS.map(loc => {
+  const sorted = [...LOCATIONS].sort((a, b) => {
+    const ea = findEarliestSlot(a), eb = findEarliestSlot(b);
+    if (!ea && !eb) return 0;
+    if (!ea) return 1;
+    if (!eb) return -1;
+    return `${ea.dateStr}T${to24hr(ea.time)}`.localeCompare(`${eb.dateStr}T${to24hr(eb.time)}`);
+  });
+
+  container.innerHTML = sorted.map(loc => {
     const earliest = findEarliestSlot(loc);
     const earliestText = earliest
       ? (() => {
-          const d = new Date(earliest.dateStr + 'T12:00:00');
-          const dl = d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-          return `<div class="location-option-earliest">Next: ${earliest.time}, ${dl}</div>`;
-        })()
+        const d = new Date(earliest.dateStr + 'T12:00:00');
+        const dl = d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        return `<div class="location-option-earliest">Next: ${earliest.time}, ${dl}</div>`;
+      })()
       : '<div class="location-option-earliest location-option-full">No slots in next 14 days</div>';
 
     return `<div class="location-option ${bookingState.location?.id === loc.id ? 'selected' : ''}"
@@ -340,17 +348,17 @@ function checkStep2() {
 
 // ── STEP 3: DATE & TIME ───────────────────────────────────────────────────────
 function renderDateTimeStep() {
-  const titleEl  = document.getElementById('step3Title');
-  const labelEl  = document.getElementById('step3LocationLabel');
+  const titleEl = document.getElementById('step3Title');
+  const labelEl = document.getElementById('step3LocationLabel');
   const bannerEl = document.getElementById('earliestSlotBanner');
 
   if (bookingState.type === 'video') {
-    if (titleEl)  titleEl.textContent = 'Choose a Date & Time';
-    if (labelEl)  labelEl.textContent = 'Video Consultation — slots from Madhu Vihar timings';
+    if (titleEl) titleEl.textContent = 'Choose a Date & Time';
+    if (labelEl) labelEl.textContent = 'Video Consultation — slots from Madhu Vihar timings';
     // Auto-select earliest available slot for video
     if (!bookingState.date) {
       const madhuVihar = LOCATIONS.find(l => l.id === 'madhu-vihar');
-      const earliest   = findEarliestSlot(madhuVihar);
+      const earliest = findEarliestSlot(madhuVihar);
       if (earliest) {
         bookingState.date = earliest.dateStr;
         bookingState.time = earliest.time;
@@ -363,8 +371,8 @@ function renderDateTimeStep() {
       }
     }
   } else {
-    if (titleEl)  titleEl.textContent = 'Choose Date & Time';
-    if (labelEl)  labelEl.textContent = bookingState.location?.name || '';
+    if (titleEl) titleEl.textContent = 'Choose Date & Time';
+    if (labelEl) labelEl.textContent = bookingState.location?.name || '';
     if (bannerEl) bannerEl.style.display = 'none';
   }
 
@@ -380,17 +388,17 @@ function renderDateTimeStep() {
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────────
 function buildCalendar() {
-  const now   = new Date();
-  const year  = now.getFullYear();
+  const now = new Date();
+  const year = now.getFullYear();
   const month = now.getMonth();
-  const firstDay    = new Date(year, month, 1).getDay();
+  const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const dayHeaders  = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  const monthNames  = ['January','February','March','April','May','June',
-                       'July','August','September','October','November','December'];
+  const dayHeaders = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
 
   const madhuVihar = LOCATIONS.find(l => l.id === 'madhu-vihar');
-  const activeLoc  = bookingState.type === 'video' ? madhuVihar : bookingState.location;
+  const activeLoc = bookingState.type === 'video' ? madhuVihar : bookingState.location;
 
   let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
     <span style="font-size:14px;font-weight:600;color:var(--ink);">${monthNames[month]} ${year}</span>
@@ -401,22 +409,22 @@ function buildCalendar() {
   for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const date    = new Date(year, month, d);
-    const isPast  = date < new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const date = new Date(year, month, d);
+    const isPast = date < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const isSelected = bookingState.date === dateStr;
-    const isToday    = date.toDateString() === now.toDateString();
+    const isToday = date.toDateString() === now.toDateString();
 
     const daySlots = activeLoc ? getSlotsForLocationOnDate(activeLoc, dateStr) : { morning: [], evening: [] };
-    let allSlots   = [...(daySlots.morning || []), ...(daySlots.evening || [])];
+    let allSlots = [...(daySlots.morning || []), ...(daySlots.evening || [])];
     if (isToday) allSlots = allSlots.filter(t => !isSlotInPast(t));
     const isClosed = activeLoc && allSlots.length === 0;
 
     const isDisabled = isPast || isClosed;
     let cls = 'cal-day';
-    if (isDisabled)      cls += ' disabled';
+    if (isDisabled) cls += ' disabled';
     else if (isSelected) cls += ' selected';
-    else if (isToday)    cls += ' today';
+    else if (isToday) cls += ' today';
 
     const click = isDisabled ? '' : `onclick="selectDate('${dateStr}')"`;
     const title = (isClosed && !isPast) ? ' title="Not available at this location on this date"' : '';
@@ -436,9 +444,9 @@ function selectDate(dateStr) {
 // ── TIME SLOTS ────────────────────────────────────────────────────────────────
 function renderTimeSlots() {
   const madhuVihar = LOCATIONS.find(l => l.id === 'madhu-vihar');
-  const loc        = bookingState.type === 'video' ? madhuVihar : bookingState.location;
-  const daySlots   = getSlotsForLocationOnDate(loc, bookingState.date);
-  let   allSlots   = [...(daySlots.morning || []), ...(daySlots.evening || [])];
+  const loc = bookingState.type === 'video' ? madhuVihar : bookingState.location;
+  const daySlots = getSlotsForLocationOnDate(loc, bookingState.date);
+  let allSlots = [...(daySlots.morning || []), ...(daySlots.evening || [])];
 
   const isToday = bookingState.date === todayDateStr();
   if (isToday) allSlots = allSlots.filter(t => !isSlotInPast(t));
@@ -457,10 +465,10 @@ function renderTimeSlots() {
   }
 
   slotsEl.innerHTML = allSlots.map(s => {
-    const isBooked   = isSlotBooked(bookingState.date, loc?.id, s);
+    const isBooked = isSlotBooked(bookingState.date, loc?.id, s);
     const isSelected = bookingState.time === s;
     let cls = 'time-slot';
-    if (isBooked)        cls += ' booked';
+    if (isBooked) cls += ' booked';
     else if (isSelected) cls += ' selected';
     const click = isBooked ? '' : `onclick="selectSlot('${s}')"`;
     return `<div class="${cls}" ${click}>${s}</div>`;
@@ -479,7 +487,7 @@ function checkStep3() {
   if (!btn) return;
   const valid = bookingState.date && bookingState.time;
   if (valid) { btn.classList.remove('btn-disabled'); btn.removeAttribute('disabled'); }
-  else       { btn.classList.add('btn-disabled');    btn.setAttribute('disabled', ''); }
+  else { btn.classList.add('btn-disabled'); btn.setAttribute('disabled', ''); }
 }
 
 // ── SLOT HELPERS ──────────────────────────────────────────────────────────────
@@ -498,7 +506,7 @@ function getSlotsForLocationOnDate(loc, dateStr) {
   // Madhu Vihar has separate weekday/sunday slot sets
   if (loc.slots.weekday || loc.slots.sunday) {
     return dow === 0
-      ? (loc.slots.sunday  || { morning: [], evening: [] })
+      ? (loc.slots.sunday || { morning: [], evening: [] })
       : (loc.slots.weekday || { morning: [], evening: [] });
   }
   return loc.slots;
@@ -532,7 +540,7 @@ function isSlotInPast(time12hr) {
 function todayDateStr() { return formatDateStr(new Date()); }
 
 function formatDateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 // ── LOCAL SLOT LOCKING (same-browser dedup until Google Calendar / backend is live) ──
@@ -547,7 +555,7 @@ function lockSlot(dateStr, locationId, time) {
   const key = `${dateStr}|${locationId || 'video'}`;
   if (!locked[key]) locked[key] = [];
   if (!locked[key].includes(time)) locked[key].push(time);
-  try { localStorage.setItem(SLOT_LOCK_KEY, JSON.stringify(locked)); } catch {}
+  try { localStorage.setItem(SLOT_LOCK_KEY, JSON.stringify(locked)); } catch { }
 }
 function isSlotBooked(dateStr, locationId, time) {
   const locked = getLockedSlots();
@@ -568,7 +576,7 @@ function isDateBlocked(dateStr) { return BLOCKED_DATES.includes(dateStr); }
 async function fetchBlockedDates() {
   if (!BOOKING_CONFIG.backend?.enabled) return;
   try {
-    const res  = await fetch(`${BOOKING_CONFIG.backend.url}?action=getBlockedDates`);
+    const res = await fetch(`${BOOKING_CONFIG.backend.url}?action=getBlockedDates`);
     const data = await res.json();
     if (Array.isArray(data.blockedDates)) BLOCKED_DATES = data.blockedDates;
   } catch {
@@ -578,24 +586,24 @@ async function fetchBlockedDates() {
 
 // ── STEP 4: PATIENT DETAILS ───────────────────────────────────────────────────
 function renderSummaryStep() {
-  const nameEl  = document.getElementById('bName');
+  const nameEl = document.getElementById('bName');
   const phoneEl = document.getElementById('bPhone');
-  if (nameEl)  nameEl.value  = bookingState.name;
+  if (nameEl) nameEl.value = bookingState.name;
   if (phoneEl) phoneEl.value = bookingState.phone;
 }
 
 function validateDetails() {
-  const name  = document.getElementById('bName').value.trim();
+  const name = document.getElementById('bName').value.trim();
   const phone = document.getElementById('bPhone').value.trim();
   const email = document.getElementById('bEmail').value.trim();
   let valid = true;
 
-  [{ id:'bName',  val:name,  msg:'Name is required'          },
-   { id:'bPhone', val:phone, msg:'Phone number is required'  }].forEach(f => {
-    const el  = document.getElementById(f.id);
+  [{ id: 'bName', val: name, msg: 'Name is required' },
+  { id: 'bPhone', val: phone, msg: 'Phone number is required' }].forEach(f => {
+    const el = document.getElementById(f.id);
     const err = document.getElementById(f.id + 'Error');
     if (!f.val) { el.classList.add('error'); if (err) err.textContent = f.msg; valid = false; }
-    else        { el.classList.remove('error'); if (err) err.textContent = ''; }
+    else { el.classList.remove('error'); if (err) err.textContent = ''; }
   });
 
   if (phone && !/^[6-9]\d{9}$/.test(phone.replace(/\s/g, ''))) {
@@ -605,9 +613,9 @@ function validateDetails() {
   }
 
   if (valid) {
-    bookingState.name   = name;
-    bookingState.phone  = phone;
-    bookingState.email  = email;
+    bookingState.name = name;
+    bookingState.phone = phone;
+    bookingState.email = email;
     bookingState.reason = document.getElementById('bReason')?.value || '';
     showConfirmStep();
   }
@@ -623,18 +631,18 @@ function renderConfirmSummary() {
   const s = bookingState;
   const dateLabel = s.date
     ? new Date(s.date + 'T12:00:00').toLocaleDateString('en-IN',
-        { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+      { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     : '—';
 
   const rows = [
-    { label: 'Patient',  value: s.name },
-    { label: 'Phone',    value: s.phone },
-    s.email    ? { label: 'Email',    value: s.email }                                           : null,
-    { label: 'Type',     value: s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit' },
-    s.location ? { label: 'Location', value: s.location.name }                                  : null,
-    s.date     ? { label: 'Date',     value: dateLabel }                                         : null,
-    s.time     ? { label: 'Time',     value: s.time }                                            : null,
-    { label: 'Fee',      value: s.type === 'video' ? '₹800' : (s.location?.fee || '₹800') },
+    { label: 'Patient', value: s.name },
+    { label: 'Phone', value: s.phone },
+    s.email ? { label: 'Email', value: s.email } : null,
+    { label: 'Type', value: s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit' },
+    s.location ? { label: 'Location', value: s.location.name } : null,
+    s.date ? { label: 'Date', value: dateLabel } : null,
+    s.time ? { label: 'Time', value: s.time } : null,
+    { label: 'Fee', value: s.type === 'video' ? '₹800' : (s.location?.fee || '₹800') },
   ].filter(Boolean);
 
   // escapeHTML applied to every user-supplied value — no XSS possible here
@@ -655,7 +663,7 @@ async function confirmBooking() {
   }
 
   const btn = document.getElementById('confirmBtn');
-  btn.disabled    = true;
+  btn.disabled = true;
   btn.textContent = 'Processing…';
 
   // Lock this slot locally so it can't be double-booked from this browser
@@ -664,7 +672,7 @@ async function confirmBooking() {
 
   // Save to backend (Google Sheets) if configured
   if (BOOKING_CONFIG.backend.enabled) {
-    await saveBookingToBackend().catch(() => {}); // non-blocking — local lock already done
+    await saveBookingToBackend().catch(() => { }); // non-blocking — local lock already done
   }
 
   const integrations = document.getElementById('integrationStatus');
@@ -692,8 +700,8 @@ async function confirmBooking() {
     addStatus('email', 'Sending confirmation email…', 'sending');
     tasks.push(
       sendEmailConfirmation()
-        .then(() => updateStatus('email', 'sent',   'Confirmation email sent'))
-        .catch(()  => updateStatus('email', 'failed', 'Email failed — we\'ll confirm via WhatsApp'))
+        .then(() => updateStatus('email', 'sent', 'Confirmation email sent'))
+        .catch(() => updateStatus('email', 'failed', 'Email failed — we\'ll confirm via WhatsApp'))
     );
   }
 
@@ -702,7 +710,7 @@ async function confirmBooking() {
     addStatus('cal', "Adding to Dr. Puja's calendar…", 'sending');
     tasks.push(
       createCalendarEvent()
-        .then(() => updateStatus('cal', 'sent',   'Calendar event created'))
+        .then(() => updateStatus('cal', 'sent', 'Calendar event created'))
         .catch(() => updateStatus('cal', 'failed', 'Calendar sync failed — clinic notified'))
     );
   }
@@ -735,14 +743,14 @@ async function confirmBooking() {
   btn.disabled = false;
   document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
   document.getElementById('bookStepSuccess').classList.add('active');
-  document.querySelectorAll('.step-dot').forEach(d  => { d.className = 'step-dot done'; d.textContent = ''; });
-  document.querySelectorAll('.step-line').forEach(l  => l.classList.add('done'));
+  document.querySelectorAll('.step-dot').forEach(d => { d.className = 'step-dot done'; d.textContent = ''; });
+  document.querySelectorAll('.step-line').forEach(l => l.classList.add('done'));
 
   // Build the success summary — escapeHTML on ALL user-supplied values
   const s = bookingState;
   const dateLabel = s.date
     ? new Date(s.date + 'T12:00:00').toLocaleDateString('en-IN',
-        { weekday:'long', day:'numeric', month:'long' })
+      { weekday: 'long', day: 'numeric', month: 'long' })
     : 'Video (flexible)';
 
   document.getElementById('confirmSummaryFinal').innerHTML =
@@ -785,15 +793,15 @@ async function saveBookingToBackend() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      name:     s.name,
-      phone:    s.phone,
-      email:    s.email || '',
-      type:     s.type,
+      name: s.name,
+      phone: s.phone,
+      email: s.email || '',
+      type: s.type,
       location: s.location?.name || 'Video Consultation',
-      date:     s.date,
-      time:     s.time,
-      fee:      s.type === 'video' ? '₹800' : (s.location?.fee || '₹800'),
-      reason:   s.reason || '',
+      date: s.date,
+      time: s.time,
+      fee: s.type === 'video' ? '₹800' : (s.location?.fee || '₹800'),
+      reason: s.reason || '',
     }),
   });
 }
@@ -803,7 +811,7 @@ function buildWhatsAppMessage(recipient) {
   const s = bookingState;
   const dateLabel = s.date
     ? new Date(s.date + 'T12:00:00').toLocaleDateString('en-IN',
-        { weekday:'long', day:'numeric', month:'long' })
+      { weekday: 'long', day: 'numeric', month: 'long' })
     : 'Video (flexible)';
 
   if (recipient === 'doctor') {
@@ -814,10 +822,10 @@ function buildWhatsAppMessage(recipient) {
       `📱 Phone:   ${s.phone}`,
       `📋 Type:    ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
       s.location ? `📍 Location: ${s.location.name}` : '',
-      s.date     ? `📅 Date:     ${dateLabel}` : '',
-      s.time     ? `⏰ Time:     ${s.time}` : '',
+      s.date ? `📅 Date:     ${dateLabel}` : '',
+      s.time ? `⏰ Time:     ${s.time}` : '',
       `💰 Fee:     ${s.type === 'video' ? '₹800' : (s.location?.fee || '₹800')}`,
-      s.reason   ? `💬 Reason:   ${s.reason}` : '',
+      s.reason ? `💬 Reason:   ${s.reason}` : '',
       ``,
       `— Sent from drpujaprasad.in booking system`,
     ].filter(Boolean).join('\n');
@@ -825,17 +833,17 @@ function buildWhatsAppMessage(recipient) {
 
   // Patient message
   return [
-    `Hi Dr. Puja%27s Clinic! 🙏`,
-    `I%27d like to confirm my appointment:`,
+    `Hi Dr. Puja's Clinic! 🙏`,
+    `I'd like to confirm my appointment:`,
     ``,
-    `👤 Name:     ${s.name}`,
-    `📱 Phone:    ${s.phone}`,
-    `📋 Type:     ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
-    s.location ? `📍 Location: ${s.location.name}` : '',
-    s.date     ? `📅 Date:     ${dateLabel}` : '',
-    s.time     ? `⏰ Time:     ${s.time}` : '',
-    `💰 Fee:      ${s.type === 'video' ? '₹800' : (s.location?.fee || '₹800')}`,
-    s.reason   ? `💬 Reason:   ${s.reason}` : '',
+    `Name:     ${s.name}`,
+    `Phone:    ${s.phone}`,
+    `Type:     ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
+    s.location ? `Location: ${s.location.name}` : '',
+    s.date ? `Date:     ${dateLabel}` : '',
+    s.time ? `Time:     ${s.time}` : '',
+    `Fee:      ${s.type === 'video' ? '₹800' : (s.location?.fee || '₹800')}`,
+    s.reason ? `💬 Reason:   ${s.reason}` : '',
   ].filter(Boolean).join('\n');
 }
 
@@ -845,22 +853,22 @@ async function sendEmailConfirmation() {
   const s = bookingState;
   const dateLabel = s.date
     ? new Date(s.date + 'T12:00:00').toLocaleDateString('en-IN',
-        { day:'numeric', month:'long', year:'numeric' })
+      { day: 'numeric', month: 'long', year: 'numeric' })
     : 'Video call (flexible)';
   return emailjs.send(
     BOOKING_CONFIG.emailjs.serviceId,
     BOOKING_CONFIG.emailjs.templateId,
     {
-      to_name:          s.name,
-      to_email:         s.email,
+      to_name: s.name,
+      to_email: s.email,
       appointment_type: s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit',
-      location:         s.location?.name || 'Video Call',
-      date:             dateLabel,
-      time:             s.time || 'To be confirmed',
-      fee:              s.type === 'video' ? '₹800' : (s.location?.fee || '₹800'),
-      clinic_phone:     BOOKING_CONFIG.clinic.phone,
-      clinic_name:      BOOKING_CONFIG.clinic.name,
-      reason:           s.reason || 'General consultation',
+      location: s.location?.name || 'Video Call',
+      date: dateLabel,
+      time: s.time || 'To be confirmed',
+      fee: s.type === 'video' ? '₹800' : (s.location?.fee || '₹800'),
+      clinic_phone: BOOKING_CONFIG.clinic.phone,
+      clinic_name: BOOKING_CONFIG.clinic.name,
+      reason: s.reason || 'General consultation',
     }
   );
 }
@@ -868,9 +876,9 @@ async function sendEmailConfirmation() {
 // ── GOOGLE CALENDAR ───────────────────────────────────────────────────────────
 async function createCalendarEvent() {
   if (!BOOKING_CONFIG.googleCalendar.enabled) return;
-  const s        = bookingState;
+  const s = bookingState;
   const startISO = toISO(s.date, s.time);
-  const endISO   = toISO(s.date, addMinutes(s.time, 15));
+  const endISO = toISO(s.date, addMinutes(s.time, 15));
   const event = {
     summary: `Appointment – ${s.name} [${s.type === 'video' ? 'Video' : 'Clinic'}]`,
     description: [
@@ -883,7 +891,7 @@ async function createCalendarEvent() {
       s.reason ? `Reason:  ${s.reason}` : '',
     ].filter(Boolean).join('\n'),
     start: { dateTime: startISO, timeZone: 'Asia/Kolkata' },
-    end:   { dateTime: endISO,   timeZone: 'Asia/Kolkata' },
+    end: { dateTime: endISO, timeZone: 'Asia/Kolkata' },
     attendees: s.email ? [{ email: s.email }] : [],
     reminders: {
       useDefault: false,
@@ -904,14 +912,14 @@ async function fetchBookedSlots() {
   const lockLocId = bookingState.type === 'video' ? 'madhu-vihar' : bookingState.location?.id;
   try {
     const response = await gapi.client.calendar.events.list({
-      calendarId:   BOOKING_CONFIG.googleCalendar.calendarId,
-      timeMin:      `${bookingState.date}T00:00:00+05:30`,
-      timeMax:      `${bookingState.date}T23:59:59+05:30`,
+      calendarId: BOOKING_CONFIG.googleCalendar.calendarId,
+      timeMin: `${bookingState.date}T00:00:00+05:30`,
+      timeMax: `${bookingState.date}T23:59:59+05:30`,
       singleEvents: true,
-      orderBy:      'startTime',
+      orderBy: 'startTime',
     });
     (response.result.items || []).forEach(e => {
-      const dt   = new Date(e.start.dateTime);
+      const dt = new Date(e.start.dateTime);
       const time = dt.toLocaleTimeString('en-IN',
         { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
       lockSlot(bookingState.date, lockLocId, time);
@@ -929,9 +937,9 @@ async function submitContactForm(e) {
     return;
   }
 
-  const name    = document.getElementById('cName').value.trim();
-  const email   = document.getElementById('cEmail').value.trim();
-  const phone   = document.getElementById('cPhone').value.trim();
+  const name = document.getElementById('cName').value.trim();
+  const email = document.getElementById('cEmail').value.trim();
+  const phone = document.getElementById('cPhone').value.trim();
   const subject = document.getElementById('cSubject').value;
   const message = document.getElementById('cMessage').value.trim();
   const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -944,12 +952,12 @@ async function submitContactForm(e) {
   if (BOOKING_CONFIG.formspree.enabled) {
     try {
       const res = await fetch(BOOKING_CONFIG.formspree.endpoint, {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ name, email, phone, subject, message }),
       });
       if (res.ok) sent = true;
-    } catch {}
+    } catch { }
   }
 
   // Option B — EmailJS (if configured, fires alongside Formspree)
@@ -957,27 +965,29 @@ async function submitContactForm(e) {
     emailjs.send(
       BOOKING_CONFIG.emailjs.serviceId,
       BOOKING_CONFIG.emailjs.templateId,
-      { to_name: "Dr. Puja's Clinic", to_email: BOOKING_CONFIG.clinic.email,
-        from_name: name, from_email: email, phone, subject, message }
-    ).catch(() => {});
+      {
+        to_name: "Dr. Puja's Clinic", to_email: BOOKING_CONFIG.clinic.email,
+        from_name: name, from_email: email, phone, subject, message
+      }
+    ).catch(() => { });
   }
 
   if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send Message'; }
 
   if (sent) {
     // Real delivery confirmed — show success
-    document.getElementById('contactForm').style.display  = 'none';
+    document.getElementById('contactForm').style.display = 'none';
     document.getElementById('contactSuccess').style.display = 'block';
     showNotification('Message Sent ✓', "We'll get back to you within 24 hours.");
   } else {
     // Formspree not configured or failed — redirect to WhatsApp with the message pre-filled
-    const waText = `Hi Dr. Puja%27s Clinic!\n\nMessage via website:\nName: ${name}\nPhone: ${phone}\nSubject: ${subject}\nMessage: ${message}`;
+    const waText = `Hi Dr. Puja's Clinic!\n\nMessage via website:\nName: ${name}\nPhone: ${phone}\nSubject: ${subject}\nMessage: ${message}`;
     window.open(
       `https://wa.me/${BOOKING_CONFIG.whatsapp.patientPhone}?text=${encodeURIComponent(waText)}`,
       '_blank', 'noopener,noreferrer'
     );
     // Show success anyway — WhatsApp is now carrying the message
-    document.getElementById('contactForm').style.display  = 'none';
+    document.getElementById('contactForm').style.display = 'none';
     document.getElementById('contactSuccess').style.display = 'block';
     showNotification('Redirected to WhatsApp', 'Your message has been pre-filled in WhatsApp. Please tap Send.');
   }
@@ -988,7 +998,7 @@ function showNotification(title, msg) {
   const n = document.getElementById('notification');
   // Use textContent — never innerHTML — for notification content (user-supplied values)
   document.getElementById('notifTitle').textContent = title;
-  document.getElementById('notifMsg').textContent   = msg;
+  document.getElementById('notifMsg').textContent = msg;
   n.classList.add('show');
   setTimeout(() => n.classList.remove('show'), 5000);
 }
@@ -1000,7 +1010,7 @@ function to24hr(timeStr) {
   let [h, m] = t.split(':').map(Number);
   if (period === 'PM' && h !== 12) h += 12;
   if (period === 'AM' && h === 12) h = 0;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 function addMinutes(timeStr, mins) {
@@ -1014,7 +1024,7 @@ function addMinutes(timeStr, mins) {
   const nm = total % 60;
   const np = nh >= 12 ? 'PM' : 'AM';
   const fh = nh > 12 ? nh - 12 : (nh === 0 ? 12 : nh);
-  return `${String(fh).padStart(2,'0')}:${String(nm).padStart(2,'0')} ${np}`;
+  return `${String(fh).padStart(2, '0')}:${String(nm).padStart(2, '0')} ${np}`;
 }
 
 function toISO(dateStr, timeStr) {
