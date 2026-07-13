@@ -313,7 +313,7 @@ function renderBookingScreen() {
     <!-- Calendly alternative -->
     <div class="bw-calendly-row">
       <span class="bw-or-text">or</span>
-      <a href="https://calendly.com/droujasclinic/15min" target="_blank" rel="noopener noreferrer"
+      <a href="https://calendly.com/drpujasclinic/15min" target="_blank" rel="noopener noreferrer"
          class="bw-calendly-link">Book via Calendly ↗</a>
     </div>
   `;
