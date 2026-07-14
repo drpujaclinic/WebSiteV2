@@ -1,0 +1,55 @@
+name: Batch Convert Existing Images to WebP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  batch-convert:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+      - name: Convert all images to WebP
+        run: |
+          echo "Starting batch conversion of all images..."
+          
+          # Find all jpg, jpeg, and png files in the images directory
+          find images -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) | sort | while read file; do
+            # Get the filename without extension
+            filename="${file%.*}"
+            # Skip if WebP already exists
+            if [ ! -f "${filename}.webp" ]; then
+              # Convert to WebP with quality 80
+              convert "$file" -quality 80 "${filename}.webp"
+              echo "✓ Converted: $file -> ${filename}.webp"
+            else
+              echo "⊘ Already exists: ${filename}.webp"
+            fi
+          done
+          
+          echo "Batch conversion completed!"
+
+      - name: Commit and push WebP files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Stage all new WebP files
+          git add images/*.webp 2>/dev/null || true
+          
+          # Check if there are any changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Batch convert: Add WebP versions of all images"
+            git push
+            echo "Successfully pushed converted images to repository"
+          else
+            echo "No new WebP files to commit"
+          fi
+        continue-on-error: true
