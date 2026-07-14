@@ -55,7 +55,11 @@
   </noscript>
 
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/booking-widget.css">
+  <!-- Replace your current booking-widget link with this: -->
+  <link rel="stylesheet" href="css/booking-widget.css" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="css/booking-widget.css">
+  </noscript>
 
   <!-- ── STRUCTURED DATA (Schema.org) ──────────────────────────────────── -->
   <script type="application/ld+json">
