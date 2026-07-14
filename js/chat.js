@@ -109,7 +109,9 @@ function renderMessages() {
     </div>
   ` : '');
 
-  container.scrollTop = container.scrollHeight;
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight;
+  });
 }
 
 function renderQuickReplies() {
@@ -206,7 +208,10 @@ function appendBookingCTA() {
     </button>
   `;
   container.appendChild(ctaDiv);
-  container.scrollTop = container.scrollHeight;
+
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight;
+  });
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
