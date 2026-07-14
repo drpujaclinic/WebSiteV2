@@ -1,0 +1,26 @@
+name: SEO & HTML Validation Linting
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: 
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run HTMLHint
+        run: |
+          npm install -g htmlhint
+          htmlhint "**/*.html" --rules "tagname-lowercase=true,attr-value-not-empty=true,alt-require=true,doctype-first=true,id-unique=true"
