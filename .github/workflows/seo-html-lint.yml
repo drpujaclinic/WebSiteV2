@@ -23,4 +23,4 @@ jobs:
       - name: Run HTMLHint
         run: |
           npm install -g htmlhint
-          htmlhint "**/*.html" --rules "tagname-lowercase=true,attr-value-not-empty=false,alt-require=true,doctype-first=true,id-unique=true"
+          htmlhint "**/*.html" --rules "tagname-lowercase=true,alt-require=true,doctype-first=true,id-unique=true"
