@@ -227,11 +227,13 @@ function renderWidget() {
     case 'confirm': body.innerHTML = renderConfirmScreen(); break;
     case 'success': body.innerHTML = renderSuccessScreen(); break;
   }
-  // After render, scroll date strip to selected date
+  // After render, scroll date strip so the month label + earliest dates stay visible
   if (widgetState.screen === 'booking') {
     requestAnimationFrame(() => {
       const sel = document.querySelector('.bw-date-pill.selected');
-      if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      // 'nearest' avoids re-centring, which was pushing the month pill off-screen
+      // whenever "Today" (near the very start of the strip) was selected.
+      if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
     });
   }
   // Auto-focus first input on phone/otp screens
@@ -251,6 +253,11 @@ function renderBookingScreen() {
   const fee  = isVideo ? '₹800' : (loc?.fee || '₹800');
   const title = isVideo ? 'Book Video Consultation' : 'Book In-Person Appointment';
 
+  // Video consults run on Madhu Vihar's own timings/branding regardless of
+  // whichever clinic was last selected on the In-Person tab.
+  const madhuVihar = LOCATIONS.find(l => l.id === 'madhu-vihar');
+  const brandLoc = isVideo ? madhuVihar : loc;
+
   // Location selector (pill list)
   const locPills = LOCATIONS.map(l =>
     `<button class="bw-loc-pill ${widgetState.location?.id === l.id ? 'active' : ''}"
@@ -267,18 +274,18 @@ function renderBookingScreen() {
         aria-selected="${isVideo}" onclick="bwSetType('video')">Video Consultation</button>
     </div>
 
-    <!-- Doctor card -->
+    <!-- Doctor / location card — name, logo, and address update per selected location -->
     <div class="bw-doctor-card">
       <div class="bw-doctor-left">
         <div class="bw-clinic-logo" aria-hidden="true">
-          <img src="images/logo.jpg" alt="" width="48" height="48"
+          <img src="${escapeHTML(brandLoc?.logo || 'images/logo.jpg')}" alt="" width="48" height="48"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="bw-logo-fallback" style="display:none">🏥</div>
         </div>
         <div class="bw-doctor-info">
-          <div class="bw-doctor-name">Dr. Puja's Clinic</div>
+          <div class="bw-doctor-name">${escapeHTML(brandLoc?.name || "Dr. Puja's Clinic")}</div>
           <div class="bw-doctor-sub">
-            ${escapeHTML(loc?.address?.split(',').slice(0,2).join(',') || 'Patparganj, Delhi')}
+            ${escapeHTML(brandLoc?.short || brandLoc?.address || 'Patparganj, Delhi')}
           </div>
           ${!isVideo ? `<button class="bw-more-locs" onclick="bwToggleLocations(event)">
             +${LOCATIONS.length - 1} More Locations <span aria-hidden="true">›</span>
@@ -309,7 +316,6 @@ function renderBookingScreen() {
     <div class="bw-slots-section" id="bwSlotsSection" aria-live="polite">
       ${date ? buildSlots(isVideo ? LOCATIONS[0] : loc, date, widgetState.slotsExpanded) : '<div class="bw-no-slots">Select a date above</div>'}
     </div>
-
   `;
 }
 
@@ -564,10 +570,11 @@ function bwSelectDate(ds) {
     slots.innerHTML = buildSlots(loc, ds, false);
     slots.setAttribute('aria-live', 'polite');
   }
-  // Scroll selected pill into view
+  // Scroll selected pill into view — 'nearest' keeps the month label visible
+  // when an early date (e.g. Today) is picked, only scrolling when truly needed.
   requestAnimationFrame(() => {
     const sel = document.querySelector('.bw-date-pill.selected');
-    if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
   });
 }
 

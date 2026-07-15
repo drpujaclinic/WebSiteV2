@@ -29,6 +29,11 @@
 
 /* ── SHEET — mobile bottom sheet ─────────────────────────── */
 .bw-sheet {
+  /* --bw-pad: horizontal breathing room for all inner content.
+     --bw-pill-w: date-pill width, tuned so ~4 pills are visible on a
+     ~375-414px phone and ~5 on the 520px desktop sheet (see below). */
+  --bw-pad: 20px;
+  --bw-pill-w: 72px;
   background: #ffffff;
   width: 100%;
   max-height: 92vh;
@@ -51,6 +56,8 @@
     align-items: center;
   }
   .bw-sheet {
+    --bw-pad: 28px;
+    --bw-pill-w: 79px;
     width: 520px;
     max-height: 88vh;
     border-radius: 16px;
@@ -84,7 +91,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px 12px;
+  padding: 14px var(--bw-pad) 12px;
   border-bottom: 1px solid #f0ede8;
   flex-shrink: 0;
 }
@@ -167,7 +174,7 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 16px 20px 10px;
+  padding: 16px var(--bw-pad) 10px;
 }
 
 .bw-doctor-left {
@@ -250,7 +257,7 @@
 .bw-loc-selector {
   flex-wrap: wrap;
   gap: 6px;
-  padding: 0 20px 10px;
+  padding: 0 var(--bw-pad) 10px;
 }
 
 .bw-loc-pill {
@@ -282,7 +289,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 20px 10px;
+  padding: 6px var(--bw-pad) 10px;
 }
 
 .bw-booking-title {
@@ -309,7 +316,7 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 4px 20px 8px;
+  padding: 4px var(--bw-pad) 8px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -342,10 +349,10 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  min-width: 62px;
+  min-width: var(--bw-pill-w);
   padding: 10px 8px 8px;
   border: 1.5px solid #e3dad0;
-  border-radius: 14px;
+  border-radius: 16px;
   background: #ffffff;
   cursor: pointer;
   scroll-snap-align: start;
@@ -399,7 +406,7 @@
 
 /* ── SLOTS SECTION ────────────────────────────────────────── */
 .bw-slots-section {
-  padding: 10px 20px 4px;
+  padding: 10px var(--bw-pad) 4px;
   min-height: 60px;
 }
 
@@ -419,7 +426,7 @@
   min-width: 94px;
   padding: 11px 8px;
   border: 1.5px solid #e3dad0;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 13px;
   font-weight: 600;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
@@ -509,7 +516,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 20px 10px;
+  padding: 16px var(--bw-pad) 10px;
 }
 
 .bw-back-btn {
@@ -545,7 +552,7 @@
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  padding: 0 20px 14px;
+  padding: 0 var(--bw-pad) 14px;
   border-bottom: 1px solid #f0ede8;
   margin-bottom: 14px;
 }
@@ -571,7 +578,7 @@
 
 /* ── PHONE INPUT ──────────────────────────────────────────── */
 .bw-phone-wrap {
-  padding: 0 20px 16px;
+  padding: 0 var(--bw-pad) 16px;
 }
 
 .bw-phone-label {
@@ -635,7 +642,7 @@
 
 /* ── OTP INPUT ────────────────────────────────────────────── */
 .bw-otp-wrap {
-  padding: 0 20px 16px;
+  padding: 0 var(--bw-pad) 16px;
 }
 
 .bw-otp-label {
@@ -717,7 +724,7 @@
 
 /* ── FORM ELEMENTS ────────────────────────────────────────── */
 .bw-form-group {
-  padding: 0 20px 14px;
+  padding: 0 var(--bw-pad) 14px;
 }
 
 .bw-form-label {
@@ -791,7 +798,7 @@
 
 /* ── BOOKING SUMMARY CARD ─────────────────────────────────── */
 .bw-summary-card {
-  margin: 0 20px 14px;
+  margin: 0 var(--bw-pad) 14px;
   border: 1px solid #e8e4de;
   border-radius: 12px;
   overflow: hidden;
@@ -835,7 +842,7 @@
 
 /* ── POLICY + CONSENT ─────────────────────────────────────── */
 .bw-policy-box {
-  margin: 0 20px 12px;
+  margin: 0 var(--bw-pad) 12px;
   background: #f8f6f2;
   border-radius: 8px;
   padding: 10px 12px;
@@ -852,7 +859,7 @@
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  padding: 0 20px 16px;
+  padding: 0 var(--bw-pad) 16px;
 }
 
 .bw-consent-row input[type="checkbox"] {
@@ -874,8 +881,8 @@
 /* ── PRIMARY BUTTON ───────────────────────────────────────── */
 .bw-primary-btn {
   display: block;
-  width: calc(100% - 40px);
-  margin: 0 20px 8px;
+  width: calc(100% - (var(--bw-pad) * 2));
+  margin: 0 var(--bw-pad) 8px;
   padding: 15px;
   background: #1f7a8c;
   color: #ffffff;
@@ -922,7 +929,7 @@
   font-size: 11px;
   color: #8fa8ad;
   text-align: center;
-  padding: 4px 20px 8px;
+  padding: 4px var(--bw-pad) 8px;
   line-height: 1.55;
   margin: 0;
 }
@@ -932,7 +939,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 20px 8px;
+  padding: 24px var(--bw-pad) 8px;
   text-align: center;
 }
 
@@ -961,7 +968,7 @@
 .bw-success-details {
   background: #f8f6f2;
   border-radius: 12px;
-  padding: 14px 20px;
+  padding: 14px var(--bw-pad);
   width: 100%;
   margin-bottom: 20px;
   display: flex;
