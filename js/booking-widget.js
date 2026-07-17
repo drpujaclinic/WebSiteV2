@@ -1,28 +1,39 @@
 /**
- * DR. PUJA'S CLINIC — Booking Widget v2
- * UI matches the provided screenshot:
- *   Tab (In-Person / Video) → Doctor card → Horizontal date strip →
- *   3-slot preview + "See all slots" → Phone number → OTP → Confirm → WhatsApp
+ * DR. PUJA'S CLINIC — Booking Widget v3
+ * Now backed by the real PHP/MySQL API (see backend/API.md) instead of
+ * localStorage + demo-mode OTP.
  *
- * Presentation:
- *   Mobile  (≤768px): bottom sheet slides up from screen bottom
- *   Desktop (>768px): centred modal with backdrop
+ * Flow: check-slots (browse) → lock-slot (reserve, 5-min hold) →
+ *   [returning patient: skip straight to details] OR [new/unknown device:
+ *   send-otp → verify-otp] → details → confirm → create-booking → success
  *
- * Dependencies: booking.js must be loaded first (LOCATIONS, slot helpers,
- *   escapeHTML, isSlotBooked, lockSlot, findEarliestSlot, getSlotsForLocationOnDate,
- *   todayDateStr, isSlotInPast, formatDateStr, BOOKING_CONFIG)
+ * Dependencies: booking.js must be loaded first (LOCATIONS, bwApi,
+ *   escapeHTML, todayDateStr, formatDateStr, findLocation)
  */
 
 'use strict';
 
+const RESERVATION_TTL_MS = 5 * 60 * 1000;
+
 // ── WIDGET STATE ──────────────────────────────────────────────────────────────
 const widgetState = {
   screen:       'booking',   // 'booking' | 'phone' | 'otp' | 'details' | 'confirm' | 'success'
-  type:         'clinic',    // 'clinic' | 'video'
+  type:         'clinic',    // 'clinic' | 'video'  (maps to API's 'in_person' | 'video')
   location:     null,        // LOCATIONS entry
   date:         null,        // 'YYYY-MM-DD'
-  time:         null,        // '12:00 PM'
+  time:         null,        // '12:00 PM' (display string)
+  slotsData:    { morning: [], evening: [] }, // last check-slots response for the selected date
   slotsExpanded: false,
+  slotsLoading: false,
+
+  reservationToken: null,
+  reservationExpiresAt: null, // epoch ms
+  reservationTimer: null,     // interval id
+
+  authenticated: false,
+  authChecked:  false,        // has /api/me.php resolved yet this session?
+  patient:      null,         // { id, name, email, phone }
+
   phone:        '',
   otp:          '',
   otpTimer:     null,
@@ -30,49 +41,71 @@ const widgetState = {
   name:         '',
   email:        '',
   reason:       '',
-  // restore previously opened location (from Locations page)
   presetLocId:  null,
 };
+
+function apiConsultType() {
+  return widgetState.type === 'video' ? 'video' : 'in_person';
+}
 
 // ── OPEN / CLOSE ──────────────────────────────────────────────────────────────
 function openBooking(locationId) {
   const overlay = document.getElementById('bwOverlay');
   if (!overlay) return;
 
-  // Reset state
   Object.assign(widgetState, {
-    screen: 'booking', type: 'clinic', date: null, time: null,
-    slotsExpanded: false, phone: '', otp: '', name: '', email: '', reason: '',
+    screen: 'booking', type: 'clinic', date: todayDateStr(), time: null,
+    slotsData: { morning: [], evening: [] }, slotsExpanded: false, slotsLoading: false,
+    reservationToken: null, reservationExpiresAt: null,
+    phone: '', otp: '', name: '', email: '', reason: '',
     presetLocId: locationId || null,
   });
   clearInterval(widgetState.otpTimer);
+  clearInterval(widgetState.reservationTimer);
 
-  // Pre-select location if provided (from Locations page)
-  if (locationId) {
-    widgetState.location = LOCATIONS.find(l => l.id === locationId) || LOCATIONS[0];
-  } else {
-    widgetState.location = LOCATIONS[0]; // default: Madhu Vihar
-  }
-
-  // Auto-select today if it's an open day, else next open day
-  widgetState.date = pickDefaultDate(widgetState.location);
+  widgetState.location = (locationId && findLocation(locationId)) || LOCATIONS[0];
 
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
   overlay._opener = document.activeElement;
 
   renderWidget();
-  // Animate bottom sheet in on mobile
   requestAnimationFrame(() => {
     const sheet = document.getElementById('bwSheet');
     if (sheet) sheet.classList.add('in');
   });
+
+  // Silent re-auth check — returning patients on a recognized device skip
+  // straight past the phone/OTP screens later in the flow.
+  bwCheckAuth();
+}
+
+async function bwCheckAuth() {
+  const res = await bwApi('/me.php');
+  widgetState.authChecked = true;
+  widgetState.authenticated = !!(res.success && res.authenticated);
+  widgetState.patient = widgetState.authenticated ? res.patient : null;
+  if (widgetState.patient) {
+    widgetState.name = widgetState.patient.name || '';
+    widgetState.email = widgetState.patient.email || '';
+  }
+}
+
+/** Waits for the auth check kicked off in openBooking() to finish, in case
+ *  the patient picks a slot faster than that request resolves. */
+async function bwEnsureAuthChecked() {
+  let waited = 0;
+  while (!widgetState.authChecked && waited < 5000) {
+    await new Promise(r => setTimeout(r, 50));
+    waited += 50;
+  }
 }
 
 function closeBooking() {
   const overlay = document.getElementById('bwOverlay');
   const sheet   = document.getElementById('bwSheet');
   clearInterval(widgetState.otpTimer);
+  clearInterval(widgetState.reservationTimer);
   if (sheet) {
     sheet.classList.remove('in');
     setTimeout(() => {
@@ -90,56 +123,42 @@ function closeBookingOutside(e) {
   if (e.target === document.getElementById('bwOverlay')) closeBooking();
 }
 
-// ── DATE HELPERS ──────────────────────────────────────────────────────────────
-function pickDefaultDate(loc) {
-  for (let i = 0; i < 14; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    const ds = formatDateStr(d);
-    const slots = getSlotsForLocationOnDate(loc, ds);
-    const all = [...(slots.morning || []), ...(slots.evening || [])];
-    const available = i === 0 ? all.filter(t => !isSlotInPast(t)) : all;
-    if (available.length > 0) return ds;
-  }
-  return formatDateStr(new Date());
-}
-
-function buildDateStrip(loc) {
+// ── DATE STRIP (skeleton first paint, then patched with real availability) ───
+function buildDateStrip(summary) {
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const today = new Date();
   const items = [];
 
-  // Month label (first pill — non-selectable)
   items.push(`<div class="bw-date-month" aria-hidden="true">${months[today.getMonth()]}</div>`);
 
   for (let i = 0; i < 14; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     const ds = formatDateStr(d);
-    const daySlots = getSlotsForLocationOnDate(loc, ds);
-    const allSlots = [...(daySlots.morning || []), ...(daySlots.evening || [])];
-    const available = i === 0
-      ? allSlots.filter(t => !isSlotBooked(ds, loc.id, t) && !isSlotInPast(t))
-      : allSlots.filter(t => !isSlotBooked(ds, loc.id, t));
-    const total = i === 0
-      ? allSlots.filter(t => !isSlotInPast(t)).length
-      : allSlots.length;
+    const info = summary ? summary[ds] : null;
 
     const isSelected = widgetState.date === ds;
-    const isClosed   = total === 0;
-    const isFull     = total > 0 && available.length === 0;
-    const isAlmost   = available.length > 0 && available.length <= 3;
-
-    let label = '';
+    let label = 'Loading…';
     let indicatorClass = '';
-    if (isClosed)      { label = 'Closed';    indicatorClass = 'bw-ind-closed'; }
-    else if (isFull)   { label = 'Full';       indicatorClass = 'bw-ind-full'; }
-    else if (isAlmost) { label = `${available.length} left`; indicatorClass = 'bw-ind-few'; }
-    else               { label = 'Available';  indicatorClass = 'bw-ind-open'; }
+    let disabled = false;
+
+    if (info) {
+      const disabledStatuses = { closed: 'Closed', full: 'Full' };
+      if (disabledStatuses[info.status]) {
+        label = disabledStatuses[info.status];
+        indicatorClass = info.status === 'closed' ? 'bw-ind-closed' : 'bw-ind-full';
+        disabled = true;
+      } else if (info.status === 'few') {
+        label = `${info.available} left`;
+        indicatorClass = 'bw-ind-few';
+      } else {
+        label = 'Available';
+        indicatorClass = 'bw-ind-open';
+      }
+    }
 
     const dayLabel = i === 0 ? 'Today' : i === 1 ? 'Tom' : String(d.getDate());
-    const disabled = isClosed || isFull;
 
     items.push(`
       <button class="bw-date-pill ${isSelected ? 'selected' : ''} ${disabled ? 'disabled' : ''}"
@@ -154,56 +173,18 @@ function buildDateStrip(loc) {
   return items.join('');
 }
 
-function buildSlots(loc, date, expanded) {
-  const daySlots = getSlotsForLocationOnDate(loc, date);
-  const morning  = (daySlots.morning || []).filter(t => date === todayDateStr() ? !isSlotInPast(t) : true);
-  const evening  = (daySlots.evening || []).filter(t => date === todayDateStr() ? !isSlotInPast(t) : true);
-
-  // For video, treat as one pool
-  const madhu = LOCATIONS.find(l => l.id === 'madhu-vihar');
-  const effectiveLoc = widgetState.type === 'video' ? madhu : loc;
-  const effectiveDay = getSlotsForLocationOnDate(effectiveLoc, date);
-  const eMorning = (effectiveDay.morning || []).filter(t => date === todayDateStr() ? !isSlotInPast(t) : true);
-  const eEvening = (effectiveDay.evening || []).filter(t => date === todayDateStr() ? !isSlotInPast(t) : true);
-  const all = [...eMorning, ...eEvening];
-
-  if (all.length === 0) {
-    return `<div class="bw-no-slots">No slots available on this date. Please choose another date.</div>`;
+async function bwRefreshDateStrip() {
+  const loc = apiConsultType() === 'video' ? findLocation('madhu-vihar') : widgetState.location;
+  if (!loc) return;
+  const res = await bwApi(`/availability-summary.php?location=${loc.id}&type=${apiConsultType()}&start=${todayDateStr()}&days=14`);
+  const strip = document.getElementById('bwDateScroll');
+  if (strip && res.success) {
+    strip.innerHTML = buildDateStrip(res.summary);
   }
-
-  if (!expanded) {
-    // Show first 3 available slots as preview
-    const preview = all.filter(t => !isSlotBooked(date, effectiveLoc.id, t)).slice(0, 3);
-    if (preview.length === 0) {
-      return `<div class="bw-no-slots">All slots booked for this date.</div>`;
-    }
-    const pills = preview.map(t => slotPill(t, date, effectiveLoc.id)).join('');
-    const remaining = all.filter(t => !isSlotBooked(date, effectiveLoc.id, t)).length - preview.length;
-    const seeAll = `<button class="bw-see-all" onclick="bwExpandSlots()" aria-expanded="false">
-      See all slots <span aria-hidden="true">›</span>
-    </button>`;
-    return `<div class="bw-slots-preview">${pills}</div>${seeAll}`;
-  }
-
-  // Expanded: Morning / Evening groups
-  const groups = [];
-  if (eMorning.length > 0) {
-    groups.push(`<div class="bw-slot-group">
-      <div class="bw-slot-group-label">Morning</div>
-      <div class="bw-slots-grid">${eMorning.map(t => slotPill(t, date, effectiveLoc.id)).join('')}</div>
-    </div>`);
-  }
-  if (eEvening.length > 0) {
-    groups.push(`<div class="bw-slot-group">
-      <div class="bw-slot-group-label">Evening</div>
-      <div class="bw-slots-grid">${eEvening.map(t => slotPill(t, date, effectiveLoc.id)).join('')}</div>
-    </div>`);
-  }
-  return `<div class="bw-slots-expanded">${groups.join('')}</div>`;
 }
 
-function slotPill(time, date, locId) {
-  const booked   = isSlotBooked(date, locId, time);
+// ── SLOTS ──────────────────────────────────────────────────────────────────────
+function slotPill(time, booked) {
   const selected = widgetState.time === time;
   let cls = 'bw-slot';
   if (booked)        cls += ' booked';
@@ -212,6 +193,60 @@ function slotPill(time, date, locId) {
   const label = booked ? `${time} — booked` : time;
   return `<button class="${cls}" ${click} ${booked ? 'disabled aria-disabled="true"' : ''}
     aria-label="${label}" aria-pressed="${selected}">${time}</button>`;
+}
+
+function renderSlotsHTML() {
+  const { morning, evening } = widgetState.slotsData;
+  const all = [...morning, ...evening];
+
+  if (widgetState.slotsLoading) {
+    return `<div class="bw-no-slots">Loading times…</div>`;
+  }
+  if (all.length === 0) {
+    return `<div class="bw-no-slots">No slots available on this date. Please choose another date.</div>`;
+  }
+
+  if (!widgetState.slotsExpanded) {
+    const preview = all.slice(0, 3);
+    const pills = preview.map(t => slotPill(t, false)).join('');
+    const seeAll = `<button class="bw-see-all" onclick="bwExpandSlots()" aria-expanded="false">
+      See all slots <span aria-hidden="true">›</span>
+    </button>`;
+    return `<div class="bw-slots-preview">${pills}</div>${seeAll}`;
+  }
+
+  const groups = [];
+  if (morning.length > 0) {
+    groups.push(`<div class="bw-slot-group">
+      <div class="bw-slot-group-label">Morning</div>
+      <div class="bw-slots-grid">${morning.map(t => slotPill(t, false)).join('')}</div>
+    </div>`);
+  }
+  if (evening.length > 0) {
+    groups.push(`<div class="bw-slot-group">
+      <div class="bw-slot-group-label">Evening</div>
+      <div class="bw-slots-grid">${evening.map(t => slotPill(t, false)).join('')}</div>
+    </div>`);
+  }
+  return `<div class="bw-slots-expanded">${groups.join('')}</div>`;
+}
+
+async function bwRefreshSlots(date) {
+  widgetState.slotsLoading = true;
+  const slotsEl = document.getElementById('bwSlotsSection');
+  if (slotsEl) slotsEl.innerHTML = renderSlotsHTML();
+
+  const loc = apiConsultType() === 'video' ? findLocation('madhu-vihar') : widgetState.location;
+  const res = await bwApi(`/check-slots.php?location=${loc.id}&date=${date}&type=${apiConsultType()}`);
+
+  // Guard against a stale response landing after the user already switched
+  // to a different date/location while this request was in flight.
+  if (widgetState.date !== date) return;
+
+  widgetState.slotsLoading = false;
+  widgetState.slotsData = res.success ? res.slots : { morning: [], evening: [] };
+  const el = document.getElementById('bwSlotsSection');
+  if (el) el.innerHTML = renderSlotsHTML();
 }
 
 // ── SCREEN RENDERERS ───────────────────────────────────────────────────────────
@@ -227,16 +262,15 @@ function renderWidget() {
     case 'confirm': body.innerHTML = renderConfirmScreen(); break;
     case 'success': body.innerHTML = renderSuccessScreen(); break;
   }
-  // After render, scroll date strip so the month label + earliest dates stay visible
+
   if (widgetState.screen === 'booking') {
+    bwRefreshDateStrip();
+    bwRefreshSlots(widgetState.date);
     requestAnimationFrame(() => {
       const sel = document.querySelector('.bw-date-pill.selected');
-      // 'nearest' avoids re-centring, which was pushing the month pill off-screen
-      // whenever "Today" (near the very start of the strip) was selected.
       if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
     });
   }
-  // Auto-focus first input on phone/otp screens
   if (widgetState.screen === 'phone') {
     requestAnimationFrame(() => document.getElementById('bwPhone')?.focus());
   }
@@ -253,12 +287,9 @@ function renderBookingScreen() {
   const fee  = isVideo ? '₹800' : (loc?.fee || '₹800');
   const title = isVideo ? 'Book Video Consultation' : 'Book In-Person Appointment';
 
-  // Video consults run on Madhu Vihar's own timings/branding regardless of
-  // whichever clinic was last selected on the In-Person tab.
-  const madhuVihar = LOCATIONS.find(l => l.id === 'madhu-vihar');
+  const madhuVihar = findLocation('madhu-vihar');
   const brandLoc = isVideo ? madhuVihar : loc;
 
-  // Location selector (pill list)
   const locPills = LOCATIONS.map(l =>
     `<button class="bw-loc-pill ${widgetState.location?.id === l.id ? 'active' : ''}"
       onclick="bwSelectLocation('${l.id}')"
@@ -266,7 +297,6 @@ function renderBookingScreen() {
   ).join('');
 
   return `
-    <!-- Tab switcher -->
     <div class="bw-tabs" role="tablist" aria-label="Consultation type">
       <button class="bw-tab ${!isVideo ? 'active' : ''}" role="tab"
         aria-selected="${!isVideo}" onclick="bwSetType('clinic')">In-Person Appointment</button>
@@ -274,7 +304,6 @@ function renderBookingScreen() {
         aria-selected="${isVideo}" onclick="bwSetType('video')">Video Consultation</button>
     </div>
 
-    <!-- Doctor / location card — name, logo, and address update per selected location -->
     <div class="bw-doctor-card">
       <div class="bw-doctor-left">
         <div class="bw-clinic-logo" aria-hidden="true">
@@ -294,29 +323,33 @@ function renderBookingScreen() {
       </div>
     </div>
 
-    <!-- Location selector (shown when +More clicked) -->
     <div id="bwLocSelector" class="bw-loc-selector" style="display:none" role="listbox" aria-label="Select location">
       ${locPills}
     </div>
 
-    <!-- Booking header with fee -->
     <div class="bw-booking-header">
       <span class="bw-booking-title">${title}</span>
       <span class="bw-booking-fee">${escapeHTML(fee)}</span>
     </div>
 
-    <!-- Horizontal date strip -->
     <div class="bw-date-strip" role="group" aria-label="Select appointment date">
       <div class="bw-date-scroll" id="bwDateScroll">
-        ${buildDateStrip(isVideo ? LOCATIONS[0] : loc)}
+        ${buildDateStrip(null)}
       </div>
     </div>
 
-    <!-- Time slots -->
     <div class="bw-slots-section" id="bwSlotsSection" aria-live="polite">
-      ${date ? buildSlots(isVideo ? LOCATIONS[0] : loc, date, widgetState.slotsExpanded) : '<div class="bw-no-slots">Select a date above</div>'}
+      ${renderSlotsHTML()}
     </div>
   `;
+}
+
+function renderReservationBadge() {
+  if (!widgetState.reservationExpiresAt) return '';
+  return `<div class="bw-mini-row" id="bwReservationTimer" style="width:100%;justify-content:center;margin-top:6px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span>Slot held for <strong id="bwReservationTimerVal">5:00</strong></span>
+  </div>`;
 }
 
 function renderPhoneScreen() {
@@ -328,7 +361,6 @@ function renderPhoneScreen() {
       <span class="bw-screen-title">Confirm with phone number</span>
     </div>
 
-    <!-- Appointment mini-summary -->
     <div class="bw-mini-summary">
       <div class="bw-mini-row">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -344,6 +376,7 @@ function renderPhoneScreen() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span>${escapeHTML(widgetState.type === 'video' ? 'Video' : widgetState.location?.name?.split(',')[0] || 'Clinic')}</span>
       </div>
+      ${renderReservationBadge()}
     </div>
 
     <div class="bw-phone-wrap">
@@ -418,13 +451,22 @@ function renderOTPScreen() {
 
 function renderDetailsScreen() {
   const reasons = ['Pregnancy','Infertility','PCOS','Routine Check-up','Menstrual Issues','Menopause','Ultrasound Review','Vaccination','Other'];
+  const backTarget = widgetState.authenticated ? 'booking' : 'phone';
   return `
     <div class="bw-back-row">
-      <button class="bw-back-btn" onclick="bwGoScreen('phone')" aria-label="Go back">
+      <button class="bw-back-btn" onclick="bwGoScreen('${backTarget}')" aria-label="Go back">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
       <span class="bw-screen-title">Your Details</span>
     </div>
+
+    ${widgetState.authenticated ? `<div class="bw-mini-summary">
+      <div class="bw-mini-row">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Welcome back! Booking with +91 ${escapeHTML(widgetState.patient?.phone || '')}</span>
+      </div>
+      ${renderReservationBadge()}
+    </div>` : ''}
 
     <div class="bw-form-group">
       <label class="bw-form-label" for="bwName">Full Name *</label>
@@ -449,7 +491,7 @@ function renderDetailsScreen() {
       </div>
     </div>
 
-    <button class="bw-primary-btn" id="bwDetailsBtn" onclick="bwGoScreen('confirm')" disabled>
+    <button class="bw-primary-btn" id="bwDetailsBtn" onclick="bwGoScreen('confirm')" ${widgetState.name ? '' : 'disabled'}>
       Review Appointment
     </button>
   `;
@@ -467,7 +509,7 @@ function renderConfirmScreen() {
 
     <div class="bw-summary-card">
       <div class="bw-summary-row"><span class="bw-summary-label">Patient</span><span class="bw-summary-val">${escapeHTML(widgetState.name)}</span></div>
-      <div class="bw-summary-row"><span class="bw-summary-label">Mobile</span><span class="bw-summary-val">+91 ${escapeHTML(widgetState.phone)}</span></div>
+      <div class="bw-summary-row"><span class="bw-summary-label">Mobile</span><span class="bw-summary-val">+91 ${escapeHTML(widgetState.phone || widgetState.patient?.phone || '')}</span></div>
       ${widgetState.email ? `<div class="bw-summary-row"><span class="bw-summary-label">Email</span><span class="bw-summary-val">${escapeHTML(widgetState.email)}</span></div>` : ''}
       <div class="bw-summary-row"><span class="bw-summary-label">Type</span><span class="bw-summary-val">${widgetState.type === 'video' ? 'Video Consultation' : 'In-Person Visit'}</span></div>
       ${widgetState.type === 'clinic' ? `<div class="bw-summary-row"><span class="bw-summary-label">Location</span><span class="bw-summary-val">${escapeHTML(widgetState.location?.name || '')}</span></div>` : ''}
@@ -477,6 +519,8 @@ function renderConfirmScreen() {
       ${widgetState.reason ? `<div class="bw-summary-row"><span class="bw-summary-label">Reason</span><span class="bw-summary-val">${escapeHTML(widgetState.reason)}</span></div>` : ''}
     </div>
 
+    ${renderReservationBadge()}
+
     <div class="bw-policy-box">
       <p>Cancellation: Please inform us at least 2 hours before your appointment.</p>
     </div>
@@ -485,6 +529,8 @@ function renderConfirmScreen() {
       <input type="checkbox" id="bwConsent" onchange="bwCheckConsent()">
       <label for="bwConsent">I confirm the information is correct and consent to Dr. Puja's Clinic contacting me for this appointment.</label>
     </div>
+
+    <div class="bw-confirm-error" id="bwConfirmError" role="alert" aria-live="polite" style="color:#e34948;font-size:12px;text-align:center;padding:0 20px 8px;"></div>
 
     <button class="bw-primary-btn bw-confirm-btn" id="bwFinalConfirmBtn" onclick="bwConfirm()" disabled>
       Confirm Appointment
@@ -500,6 +546,7 @@ function renderSuccessScreen() {
       <div class="bw-success-tick" aria-hidden="true">✅</div>
       <h3 class="bw-success-title">Appointment Confirmed!</h3>
       <p class="bw-success-sub">
+        Booking ID: <strong>${escapeHTML(widgetState.bookingRef || '')}</strong>.
         Your WhatsApp confirmation is opening. Please tap Send to complete.
       </p>
 
@@ -535,15 +582,13 @@ function bwSetType(type) {
   widgetState.type = type;
   widgetState.slotsExpanded = false;
   widgetState.time = null;
-  widgetState.date = pickDefaultDate(
-    type === 'video' ? LOCATIONS[0] : widgetState.location
-  );
+  widgetState.date = todayDateStr();
   renderWidget();
 }
 
 function bwSelectLocation(locId) {
-  widgetState.location = LOCATIONS.find(l => l.id === locId);
-  widgetState.date = pickDefaultDate(widgetState.location);
+  widgetState.location = findLocation(locId);
+  widgetState.date = todayDateStr();
   widgetState.time = null;
   widgetState.slotsExpanded = false;
   const sel = document.getElementById('bwLocSelector');
@@ -561,17 +606,17 @@ function bwSelectDate(ds) {
   widgetState.date = ds;
   widgetState.time = null;
   widgetState.slotsExpanded = false;
-  // Re-render just the date strip and slots section
+
   const strip = document.getElementById('bwDateScroll');
-  const slots = document.getElementById('bwSlotsSection');
-  const loc   = widgetState.type === 'video' ? LOCATIONS[0] : widgetState.location;
-  if (strip) strip.innerHTML = buildDateStrip(loc);
-  if (slots) {
-    slots.innerHTML = buildSlots(loc, ds, false);
-    slots.setAttribute('aria-live', 'polite');
+  if (strip) {
+    strip.querySelectorAll('.bw-date-pill').forEach(p => p.classList.remove('selected'));
+    const clicked = Array.from(strip.querySelectorAll('.bw-date-pill'))
+      .find(p => p.getAttribute('onclick') === `bwSelectDate('${ds}')`);
+    if (clicked) clicked.classList.add('selected');
   }
-  // Scroll selected pill into view — 'nearest' keeps the month label visible
-  // when an early date (e.g. Today) is picked, only scrolling when truly needed.
+
+  bwRefreshSlots(ds);
+
   requestAnimationFrame(() => {
     const sel = document.querySelector('.bw-date-pill.selected');
     if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
@@ -581,18 +626,58 @@ function bwSelectDate(ds) {
 function bwExpandSlots() {
   widgetState.slotsExpanded = true;
   const slots = document.getElementById('bwSlotsSection');
-  const loc   = widgetState.type === 'video' ? LOCATIONS[0] : widgetState.location;
-  if (slots) slots.innerHTML = buildSlots(loc, widgetState.date, true);
+  if (slots) slots.innerHTML = renderSlotsHTML();
 }
 
-function bwSelectSlot(time) {
+async function bwSelectSlot(time) {
   widgetState.time = time;
-  // If slot selected on expanded view, keep expanded; otherwise collapsed
   const slots = document.getElementById('bwSlotsSection');
-  const loc   = widgetState.type === 'video' ? LOCATIONS[0] : widgetState.location;
-  if (slots) slots.innerHTML = buildSlots(loc, widgetState.date, widgetState.slotsExpanded);
-  // Proceed to phone after brief visual tick
-  setTimeout(() => bwGoScreen('phone'), 350);
+  if (slots) slots.innerHTML = renderSlotsHTML();
+
+  const loc = apiConsultType() === 'video' ? findLocation('madhu-vihar') : widgetState.location;
+  const res = await bwApi('/lock-slot.php', {
+    method: 'POST',
+    body: { location: loc.id, date: widgetState.date, time, consult_type: apiConsultType() },
+  });
+
+  if (!res.success) {
+    alert(res.error || 'That slot is no longer available. Please pick another.');
+    widgetState.time = null;
+    bwRefreshSlots(widgetState.date);
+    return;
+  }
+
+  widgetState.reservationToken = res.reservation_token;
+  widgetState.reservationExpiresAt = Date.now() + (res.expires_in * 1000);
+  startReservationTimer();
+
+  await bwEnsureAuthChecked();
+  bwGoScreen(widgetState.authenticated ? 'details' : 'phone');
+}
+
+function startReservationTimer() {
+  clearInterval(widgetState.reservationTimer);
+  widgetState.reservationTimer = setInterval(() => {
+    const msLeft = widgetState.reservationExpiresAt - Date.now();
+    const el = document.getElementById('bwReservationTimerVal');
+    if (msLeft <= 0) {
+      clearInterval(widgetState.reservationTimer);
+      if (['phone', 'otp', 'details', 'confirm'].includes(widgetState.screen)) {
+        alert('Your held slot has expired. Please pick a time again.');
+        widgetState.reservationToken = null;
+        widgetState.reservationExpiresAt = null;
+        widgetState.time = null;
+        bwGoScreen('booking');
+      }
+      return;
+    }
+    if (el) {
+      const totalSec = Math.ceil(msLeft / 1000);
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+    }
+  }, 1000);
 }
 
 function bwGoBack() {
@@ -601,10 +686,9 @@ function bwGoBack() {
 }
 
 function bwGoScreen(screen) {
-  // Validate before moving forward
   if (screen === 'confirm') {
-    widgetState.name = document.getElementById('bwName')?.value.trim() || '';
-    widgetState.email = document.getElementById('bwEmail')?.value.trim() || '';
+    widgetState.name = document.getElementById('bwName')?.value.trim() || widgetState.name;
+    widgetState.email = document.getElementById('bwEmail')?.value.trim() || widgetState.email;
     if (!widgetState.name) {
       document.getElementById('bwName')?.classList.add('error');
       return;
@@ -614,7 +698,7 @@ function bwGoScreen(screen) {
   renderWidget();
 }
 
-// ── PHONE INPUT ───────────────────────────────────────────────────────────────
+// ── PHONE / OTP ───────────────────────────────────────────────────────────────
 function bwPhoneInput(el) {
   el.value = el.value.replace(/\D/g, '').slice(0, 10);
   widgetState.phone = el.value;
@@ -625,22 +709,33 @@ function bwPhoneInput(el) {
   if (err) err.textContent = '';
 }
 
-function bwSendOTP() {
+async function bwSendOTP() {
   const phone = widgetState.phone;
   if (!/^[6-9]\d{9}$/.test(phone)) {
     const err = document.getElementById('bwPhoneError');
     if (err) err.textContent = 'Enter a valid 10-digit Indian mobile number';
     return;
   }
-  // When MSG91 is configured: call /api/auth/otp/send
-  // For now: simulate OTP sent (demo mode)
+
+  const btn = document.getElementById('bwSendOTPBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+  const res = await bwApi('/send-otp.php', { method: 'POST', body: { phone } });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Send OTP'; }
+
+  if (!res.success) {
+    const err = document.getElementById('bwPhoneError');
+    if (err) err.textContent = res.error || 'Could not send OTP. Please try again.';
+    return;
+  }
+
   widgetState.screen = 'otp';
   widgetState.otp = '';
   widgetState.otpSeconds = 30;
   renderWidget();
 }
 
-// ── OTP INPUT ─────────────────────────────────────────────────────────────────
 function bwOTPInput(e, idx) {
   const val = e.target.value.replace(/\D/g, '');
   e.target.value = val;
@@ -706,9 +801,7 @@ function startOTPTimer() {
   }, 1000);
 }
 
-function bwResendOTP() {
-  widgetState.otpSeconds = 30;
-  // Reset boxes
+async function bwResendOTP() {
   for (let i = 0; i < 6; i++) {
     const box = document.getElementById(`bwOTPBox${i}`);
     if (box) box.value = '';
@@ -716,33 +809,54 @@ function bwResendOTP() {
   widgetState.otp = '';
   const btn = document.getElementById('bwVerifyBtn');
   if (btn) btn.disabled = true;
+
+  const res = await bwApi('/send-otp.php', { method: 'POST', body: { phone: widgetState.phone } });
+  if (!res.success) {
+    const err = document.getElementById('bwOTPError');
+    if (err) err.textContent = res.error || 'Could not resend OTP.';
+    return;
+  }
+
+  widgetState.otpSeconds = 30;
   const timerEl = document.getElementById('bwOTPTimer');
   if (timerEl) timerEl.style.display = 'block';
   startOTPTimer();
 }
 
-function bwVerifyOTP() {
+async function bwVerifyOTP() {
   const otp = widgetState.otp;
   if (otp.length < 6) return;
 
-  // When MSG91 is configured: POST to /api/auth/otp/verify
-  // Demo mode: accept any 6-digit OTP
-  if (otp.length === 6) {
-    clearInterval(widgetState.otpTimer);
-    widgetState.screen = 'details';
-    renderWidget();
-    // Re-check details after render
-    setTimeout(bwCheckDetails, 50);
-  } else {
+  const btn = document.getElementById('bwVerifyBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+
+  const res = await bwApi('/verify-otp.php', {
+    method: 'POST',
+    body: { phone: widgetState.phone, otp },
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Verify & Continue'; }
+
+  if (!res.success) {
     const err = document.getElementById('bwOTPError');
-    if (err) err.textContent = 'Incorrect OTP. Please try again.';
+    if (err) err.textContent = res.error || 'Incorrect OTP. Please try again.';
+    return;
   }
+
+  clearInterval(widgetState.otpTimer);
+  widgetState.authenticated = true;
+  widgetState.patient = res.patient;
+  if (res.patient?.name) widgetState.name = res.patient.name;
+  if (res.patient?.email) widgetState.email = res.patient.email;
+
+  widgetState.screen = 'details';
+  renderWidget();
+  setTimeout(bwCheckDetails, 50);
 }
 
 // ── DETAILS ───────────────────────────────────────────────────────────────────
 function bwSelectReason(r) {
   widgetState.reason = widgetState.reason === r ? '' : r;
-  // Re-render just the chips
   const chips = document.querySelector('.bw-reason-chips');
   const reasons = ['Pregnancy','Infertility','PCOS','Routine Check-up','Menstrual Issues','Menopause','Ultrasound Review','Vaccination','Other'];
   if (chips) chips.innerHTML = reasons.map(re =>
@@ -765,32 +879,53 @@ function bwCheckConsent() {
   if (btn) btn.disabled = !cb?.checked;
 }
 
-function bwConfirm() {
-  const locId = widgetState.type === 'video' ? 'madhu-vihar' : widgetState.location?.id;
-  lockSlot(widgetState.date, locId, widgetState.time);
+async function bwConfirm() {
+  const btn = document.getElementById('bwFinalConfirmBtn');
+  const errEl = document.getElementById('bwConfirmError');
+  if (errEl) errEl.textContent = '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Confirming…'; }
 
-  // Save to backend if configured
-  if (typeof saveBookingToBackend === 'function' && BOOKING_CONFIG.backend?.enabled) {
-    saveBookingToBackend().catch(() => {});
+  const res = await bwApi('/create-booking.php', {
+    method: 'POST',
+    body: {
+      reservation_token: widgetState.reservationToken,
+      name: widgetState.name,
+      email: widgetState.email || '',
+      reason: widgetState.reason || '',
+    },
+  });
+
+  if (!res.success) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirm Appointment'; }
+    if (res.code === 'reservation_expired') {
+      alert('Your held slot expired while filling in details. Please pick a time again.');
+      widgetState.reservationToken = null;
+      widgetState.time = null;
+      bwGoScreen('booking');
+      return;
+    }
+    if (errEl) errEl.textContent = res.error || 'Could not complete the booking. Please try again.';
+    return;
   }
+
+  clearInterval(widgetState.reservationTimer);
+  widgetState.bookingRef = res.booking.booking_ref;
+  widgetState.date = res.booking.date;
+  widgetState.time = res.booking.time;
 
   widgetState.screen = 'success';
   renderWidget();
 
-  // Open patient WhatsApp after 1s
   setTimeout(() => {
-    const msg = buildSuccessWAMessage();
     window.open(
-      `https://wa.me/${BOOKING_CONFIG.whatsapp.patientPhone}?text=${encodeURIComponent(msg)}`,
+      `https://wa.me/${BOOKING_CONFIG.whatsapp.patientPhone}?text=${encodeURIComponent(buildSuccessWAMessage())}`,
       '_blank', 'noopener,noreferrer'
     );
   }, 1000);
 
-  // Open doctor WhatsApp after 2.5s
   setTimeout(() => {
-    const doctorMsg = buildDoctorWAMessage();
     window.open(
-      `https://wa.me/${BOOKING_CONFIG.whatsapp.doctorPhone}?text=${encodeURIComponent(doctorMsg)}`,
+      `https://wa.me/${BOOKING_CONFIG.whatsapp.doctorPhone}?text=${encodeURIComponent(buildDoctorWAMessage())}`,
       '_blank', 'noopener,noreferrer'
     );
   }, 2500);
@@ -805,8 +940,9 @@ function buildSuccessWAMessage() {
     `Hi Dr. Puja%27s Clinic! 🙏`,
     `I%27d like to confirm my appointment:`,
     ``,
+    `🔖 Booking ID: ${s.bookingRef || ''}`,
     `👤 Name: ${s.name}`,
-    `📱 Phone: +91 ${s.phone}`,
+    `📱 Phone: +91 ${s.phone || s.patient?.phone || ''}`,
     `📋 Type: ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
     s.location && s.type !== 'video' ? `📍 Location: ${s.location.name}` : '',
     `📅 Date: ${dl}`,
@@ -823,8 +959,9 @@ function buildDoctorWAMessage() {
   return [
     `🔔 *New Appointment*`,
     ``,
+    `🔖 Booking ID: ${s.bookingRef || ''}`,
     `👤 Patient: ${s.name}`,
-    `📱 Phone: +91 ${s.phone}`,
+    `📱 Phone: +91 ${s.phone || s.patient?.phone || ''}`,
     `📋 Type: ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
     s.location && s.type !== 'video' ? `📍 Location: ${s.location.name}` : '',
     `📅 Date: ${dl}`,
@@ -845,7 +982,6 @@ function formatDateForDisplay(ds) {
 
 // ── HTML TEMPLATE (injected into index.html) ──────────────────────────────────
 function injectBookingWidget() {
-  // Remove old booking overlay if present
   const old = document.getElementById('bookingOverlay');
   if (old) old.remove();
 
@@ -868,5 +1004,4 @@ function injectBookingWidget() {
   document.body.appendChild(div.firstElementChild);
 }
 
-// Init
 document.addEventListener('DOMContentLoaded', injectBookingWidget);
