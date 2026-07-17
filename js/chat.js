@@ -108,10 +108,11 @@ function renderMessages() {
       <div class="chat-typing"><span></span><span></span><span></span></div>
     </div>
   ` : '');
-
-  requestAnimationFrame(() => {
+  
+  //FIX:Use setTimeout instead of requestAnimationFrame to avoid forced reflow
+  setTimeout(() => {
     container.scrollTop = container.scrollHeight;
-  });
+  }, 0);
 }
 
 function renderQuickReplies() {
@@ -209,9 +210,10 @@ function appendBookingCTA() {
   `;
   container.appendChild(ctaDiv);
 
-  requestAnimationFrame(() => {
+  // FIX: Use setTimeout instead of requestAnimationFrame to avoid forced reflow
+  setTimeout(() => {
     container.scrollTop = container.scrollHeight;
-  });
+  }, 0);
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
