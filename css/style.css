@@ -2755,18 +2755,15 @@ textarea {
 
   @media (max-width: 1024px) {
     .hero-inner {
-      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
     }
 
     .hero-content {
-      grid-column: auto;
-      grid-row: auto;
       order: 1;
     }
 
     .hero-visual {
-      grid-column: auto;
-      grid-row: auto;
       order: 2;
       display: block;
       height: 300px;
