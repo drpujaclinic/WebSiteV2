@@ -2771,8 +2771,6 @@ textarea {
     }
 
     .hero-cta-group {
-      grid-column: auto;
-      grid-row: auto;
       order: 3;
     }
   }
