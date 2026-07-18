@@ -2753,26 +2753,39 @@ textarea {
     height: 400px;
   }
 
-  @media (max-width: 1024px) {
-    .hero-inner {
-      display: flex;
-      flex-direction: column;
-    }
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+  }
 
-    .hero-content {
-      order: 1;
-    }
+  .hero-content {
+    order: 1;
+  }
 
-    .hero-visual {
-      order: 2;
-      display: block;
-      height: 300px;
-      margin: 0 auto 24px;
-    }
+  .hero-visual {
+    order: 2;
+    display: block;
+    height: 300px;
+    margin: 0 auto 24px;
+  }
 
-    .hero-cta-group {
-      order: 3;
-    }
+  .hero-cta-group {
+    order: 3;
+  }
+
+  .hero-img-frame {
+    width: 200px;
+    height: 280px;
+  }
+
+  .hero-img-bg-shape {
+    width: 230px;
+    height: 310px;
+  }
+
+  .hero-card-top,
+  .hero-card-bottom {
+    display: none;
   }
 }
 
