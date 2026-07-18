@@ -332,9 +332,20 @@ function renderBookingScreen() {
           <div class="bw-doctor-sub">
             ${escapeHTML(brandLoc?.short || brandLoc?.address || 'Patparganj, Delhi')}
           </div>
-          ${!isVideo ? `<button class="bw-more-locs" onclick="bwToggleLocations(event)">
-            +${LOCATIONS.length - 1} More Locations <span aria-hidden="true">›</span>
-          </button>` : ''}
+          ${!isVideo ? `<div class="bw-more-locs-row">
+            <div class="bw-loc-avatars" aria-hidden="true">
+              ${LOCATIONS.filter(l => l.id !== widgetState.location?.id).slice(0, 3).map(l =>
+                `<div class="bw-loc-avatar">
+                  <img src="${escapeHTML(l.logo)}" alt="${escapeHTML(l.name)}"
+                       onerror="this.parentElement.style.background='#e4f3f6';this.remove()">
+                </div>`
+              ).join('')}
+            </div>
+            <button class="bw-more-locs" onclick="bwToggleLocations(event)"
+                    aria-label="See ${LOCATIONS.length - 1} more clinic locations">
+              +${LOCATIONS.length - 1} More Locations <span aria-hidden="true">›</span>
+            </button>
+          </div>` : ''}
         </div>
       </div>
     </div>
@@ -349,8 +360,14 @@ function renderBookingScreen() {
     </div>
 
     <div class="bw-date-strip" role="group" aria-label="Select appointment date">
-      <div class="bw-date-scroll" id="bwDateScroll">
-        ${buildDateStrip(null)}
+      <div class="bw-date-scroll-wrap">
+        <div class="bw-scroll-sentinel bw-scroll-sentinel-left"
+             aria-hidden="true" id="bwScrollLeft"></div>
+        <div class="bw-date-scroll" id="bwDateScroll">
+          ${buildDateStrip(null)}
+        </div>
+        <div class="bw-scroll-sentinel bw-scroll-sentinel-right"
+             aria-hidden="true" id="bwScrollRight"></div>
       </div>
     </div>
 
@@ -1021,3 +1038,64 @@ function injectBookingWidget() {
 }
 
 document.addEventListener('DOMContentLoaded', injectBookingWidget);
+
+
+// ── DATE STRIP HOVER-SCROLL ───────────────────────────────────────────────────
+// Continuously scrolls the strip while the mouse hovers over the sentinel edges.
+// Stops on mouseleave. Scrolls 7 days worth of content in each direction.
+(function initDateHoverScroll() {
+  let _scrollTimer = null;
+  const SPEED  = 2.5;  // px per animation frame
+  const SCROLL_DIRECTION = { left: -1, right: 1 };
+
+  function stopScroll() {
+    if (_scrollTimer) { cancelAnimationFrame(_scrollTimer); _scrollTimer = null; }
+  }
+
+  function startScroll(direction) {
+    stopScroll();
+    const strip = document.getElementById('bwDateScroll');
+    if (!strip) return;
+
+    function step() {
+      strip.scrollLeft += SPEED * direction;
+      // Stop when we hit the boundary
+      const atStart = strip.scrollLeft <= 0;
+      const atEnd   = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1;
+      if ((direction < 0 && atStart) || (direction > 0 && atEnd)) {
+        stopScroll();
+        return;
+      }
+      _scrollTimer = requestAnimationFrame(step);
+    }
+    _scrollTimer = requestAnimationFrame(step);
+  }
+
+  // Re-bind whenever the booking screen re-renders (sentinels are re-created)
+  function bindSentinels() {
+    const left  = document.getElementById('bwScrollLeft');
+    const right = document.getElementById('bwScrollRight');
+    if (!left || !right) return;
+
+    left.addEventListener('mouseenter',  () => startScroll(SCROLL_DIRECTION.left));
+    left.addEventListener('mouseleave',  stopScroll);
+    right.addEventListener('mouseenter', () => startScroll(SCROLL_DIRECTION.right));
+    right.addEventListener('mouseleave', stopScroll);
+
+    // Also stop if mouse leaves the strip container entirely
+    const wrap = left.closest('.bw-date-scroll-wrap');
+    if (wrap) wrap.addEventListener('mouseleave', stopScroll);
+  }
+
+  // Use a MutationObserver to re-bind every time bwDateScroll is added to DOM
+  // (renderWidget() replaces bwBody innerHTML each time)
+  const observer = new MutationObserver(() => {
+    if (document.getElementById('bwScrollLeft')) bindSentinels();
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const body = document.getElementById('bwBody');
+    if (body) observer.observe(body, { childList: true, subtree: true });
+  });
+}());
+

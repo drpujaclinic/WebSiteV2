@@ -295,6 +295,44 @@
 }
 
 .bw-more-locs:hover { color: #12282d; }
+/* ── LOCATION LOGO AVATARS (stacked row next to +N More Locations) ────────── */
+.bw-more-locs-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.bw-loc-avatars {
+  display: flex;
+  align-items: center;
+}
+
+/* Each avatar overlaps the previous by 8px */
+.bw-loc-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  overflow: hidden;
+  background: #f0f9fb;
+  flex-shrink: 0;
+  margin-left: -8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.bw-loc-avatars .bw-loc-avatar:first-child {
+  margin-left: 0;
+}
+
+.bw-loc-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* "+N More Locations" link keeps its existing .bw-more-locs styling */
+
 
 /* ── LOCATION SELECTOR ─────────────────────────────────────  */
 .bw-loc-selector {
@@ -366,6 +404,50 @@
 }
 
 .bw-date-scroll::-webkit-scrollbar { display: none; }
+/* ── DATE STRIP HOVER-SCROLL ──────────────────────────────────
+   Wrap .bw-date-scroll in .bw-date-scroll-wrap. Left/right sentinel
+   divs sit at the edges; JS listens to mouseenter/mouseleave on them
+   to trigger smooth auto-scroll. CSS provides the visual edge fade.   */
+.bw-date-scroll-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.bw-date-scroll-wrap::before,
+.bw-date-scroll-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 32px;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.bw-date-scroll-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(255,255,255,0.9), transparent);
+}
+
+.bw-date-scroll-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+}
+
+/* Sentinel hover zones — invisible, positioned at left/right edges */
+.bw-scroll-sentinel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.bw-scroll-sentinel-left  { left:  0; }
+.bw-scroll-sentinel-right { right: 0; }
+
 
 /* Vertical month label — writing-mode on the element itself so it works
    whether the content is bare text or wrapped in a <span> */
@@ -396,21 +478,24 @@
   user-select: none;
 }
 
-/* Date pill */
+/* Date pill — flex:1 fills available strip width so 4 pills span edge-to-edge.
+   min-width preserved as a floor; max-width prevents excessive stretching on
+   very wide screens. flex-shrink:0 removed so pills can grow. */
 .bw-date-pill {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 3px;
-  min-width: var(--bw-pill-w);
-  padding: 10px 8px 8px;
+  flex: 1;
+  min-width: 60px;
+  max-width: 110px;
+  padding: 10px 4px 8px;
   border: 1.5px solid #e3dad0;
   border-radius: 16px;
   background: #ffffff;
   cursor: pointer;
   scroll-snap-align: start;
-  flex-shrink: 0;
   transition: all 0.15s;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
 }
