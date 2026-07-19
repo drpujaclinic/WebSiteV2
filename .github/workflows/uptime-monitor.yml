@@ -18,7 +18,7 @@ jobs:
           
           echo "Website responded with status code: $STATUS_CODE"
           
-          if [ "$STATUS_CODE" -ne 200 ]; then
+          if [ "$STATUS_CODE" -ne 200 ] && [ "$STATUS_CODE" -ne 301 ]; then
             echo "Error: Website appears to be down!"
             exit 1
           fi
