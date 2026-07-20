@@ -5,7 +5,7 @@
  *
  * Flow: check-slots (browse) → lock-slot (reserve, 5-min hold) →
  *   [returning patient: skip straight to details] OR [new/unknown device:
- *   send-otp → verify-otp] → details → confirm → create-booking → success
+ *   email-send-otp → email-verify-otp] → details → confirm → create-booking → success
  *
  * Dependencies: booking.js must be loaded first (LOCATIONS, bwApi,
  *   escapeHTML, todayDateStr, formatDateStr, findLocation)
@@ -17,12 +17,12 @@ const RESERVATION_TTL_MS = 5 * 60 * 1000;
 
 // ── WIDGET STATE ──────────────────────────────────────────────────────────────
 const widgetState = {
-  screen:       'booking',   // 'booking' | 'phone' | 'otp' | 'details' | 'confirm' | 'success'
-  type:         'clinic',    // 'clinic' | 'video'  (maps to API's 'in_person' | 'video')
-  location:     null,        // LOCATIONS entry
-  date:         null,        // 'YYYY-MM-DD'
-  time:         null,        // '12:00 PM' (display string)
-  slotsData:    { morning: [], evening: [] }, // last check-slots response for the selected date
+  screen: 'booking',   // 'booking' | 'contact' | 'otp' | 'details' | 'confirm' | 'success'
+  type: 'clinic',    // 'clinic' | 'video'  (maps to API's 'in_person' | 'video')
+  location: null,        // LOCATIONS entry
+  date: null,        // 'YYYY-MM-DD'
+  time: null,        // '12:00 PM' (display string)
+  slotsData: { morning: [], evening: [] }, // last check-slots response for the selected date
   slotsExpanded: false,
   slotsLoading: false,
 
@@ -31,17 +31,17 @@ const widgetState = {
   reservationTimer: null,     // interval id
 
   authenticated: false,
-  authChecked:  false,        // has /api/me.php resolved yet this session?
-  patient:      null,         // { id, name, email, phone }
+  authChecked: false,        // has /api/me.php resolved yet this session?
+  patient: null,         // { id, name, email, phone }
 
-  phone:        '',
-  otp:          '',
-  otpTimer:     null,
-  otpSeconds:   30,
-  name:         '',
-  email:        '',
-  reason:       '',
-  presetLocId:  null,
+  phone: '',
+  otp: '',
+  otpTimer: null,
+  otpSeconds: 30,
+  name: '',
+  email: '',
+  reason: '',
+  presetLocId: null,
 };
 
 function apiConsultType() {
@@ -103,7 +103,7 @@ async function bwEnsureAuthChecked() {
 
 function closeBooking() {
   const overlay = document.getElementById('bwOverlay');
-  const sheet   = document.getElementById('bwSheet');
+  const sheet = document.getElementById('bwSheet');
   clearInterval(widgetState.otpTimer);
   clearInterval(widgetState.reservationTimer);
   if (sheet) {
@@ -125,10 +125,10 @@ function closeBookingOutside(e) {
 
 // ── DATE STRIP (skeleton first paint, then patched with real availability) ───
 function buildDateStrip(summary) {
-  const days   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const today  = new Date();
-  const items  = [];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const today = new Date();
+  const items = [];
 
   // Vertical month label — CSS handles the rotation on .bw-date-month itself
   items.push(`<div class="bw-date-month" aria-hidden="true">${months[today.getMonth()].toUpperCase()}</div>`);
@@ -137,9 +137,9 @@ function buildDateStrip(summary) {
   // Scans up to 14 days ahead so locations open only 2 days/week still get 4 pills
   const openDays = [];
   for (let i = 0; i < 14 && openDays.length < 4; i++) {
-    const d  = new Date(today);
+    const d = new Date(today);
     d.setDate(today.getDate() + i);
-    const ds   = formatDateStr(d);
+    const ds = formatDateStr(d);
     const info = summary ? summary[ds] : null;
 
     // If summary not loaded yet, show all days as loading (skeleton state)
@@ -203,7 +203,7 @@ async function bwRefreshDateStrip() {
 function slotPill(time, booked) {
   const selected = widgetState.time === time;
   let cls = 'bw-slot';
-  if (booked)        cls += ' booked';
+  if (booked) cls += ' booked';
   else if (selected) cls += ' selected';
   const click = booked ? '' : `onclick="bwSelectSlot('${time}')"`;
   const label = booked ? `${time} — booked` : time;
@@ -272,8 +272,8 @@ function renderWidget() {
   if (!body) return;
   switch (widgetState.screen) {
     case 'booking': body.innerHTML = renderBookingScreen(); break;
-    case 'phone':   body.innerHTML = renderPhoneScreen();   break;
-    case 'otp':     body.innerHTML = renderOTPScreen();     break;
+    case 'contact': body.innerHTML = renderContactScreen(); break;
+    case 'otp': body.innerHTML = renderOTPScreen(); break;
     case 'details': body.innerHTML = renderDetailsScreen(); break;
     case 'confirm': body.innerHTML = renderConfirmScreen(); break;
     case 'success': body.innerHTML = renderSuccessScreen(); break;
@@ -287,8 +287,8 @@ function renderWidget() {
       if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
     });
   }
-  if (widgetState.screen === 'phone') {
-    requestAnimationFrame(() => document.getElementById('bwPhone')?.focus());
+  if (widgetState.screen === 'contact') {
+    requestAnimationFrame(() => document.getElementById('bwContactEmail')?.focus());
   }
   if (widgetState.screen === 'otp') {
     requestAnimationFrame(() => document.getElementById('bwOTP')?.focus());
@@ -297,10 +297,10 @@ function renderWidget() {
 }
 
 function renderBookingScreen() {
-  const loc  = widgetState.location;
+  const loc = widgetState.location;
   const date = widgetState.date;
   const isVideo = widgetState.type === 'video';
-  const fee  = isVideo ? '₹800' : (loc?.fee || '₹800');
+  const fee = isVideo ? '₹800' : (loc?.fee || '₹800');
   const title = isVideo ? 'Book Video Consultation' : 'Book In-Person Appointment';
 
   const madhuVihar = findLocation('madhu-vihar');
@@ -335,11 +335,11 @@ function renderBookingScreen() {
           ${!isVideo ? `<div class="bw-more-locs-row">
             <div class="bw-loc-avatars" aria-hidden="true">
               ${LOCATIONS.filter(l => l.id !== widgetState.location?.id).slice(0, 3).map(l =>
-                `<div class="bw-loc-avatar">
+    `<div class="bw-loc-avatar">
                   <img src="${escapeHTML(l.logo)}" alt="${escapeHTML(l.name)}"
                        onerror="this.parentElement.style.background='#e4f3f6';this.remove()">
                 </div>`
-              ).join('')}
+  ).join('')}
             </div>
             <button class="bw-more-locs" onclick="bwToggleLocations(event)"
                     aria-label="See ${LOCATIONS.length - 1} more clinic locations">
@@ -385,13 +385,13 @@ function renderReservationBadge() {
   </div>`;
 }
 
-function renderPhoneScreen() {
+function renderContactScreen() {
   return `
     <div class="bw-back-row">
       <button class="bw-back-btn" onclick="bwGoBack()" aria-label="Go back">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
-      <span class="bw-screen-title">Confirm with phone number</span>
+      <span class="bw-screen-title">Confirm your details</span>
     </div>
 
     <div class="bw-mini-summary">
@@ -412,29 +412,40 @@ function renderPhoneScreen() {
       ${renderReservationBadge()}
     </div>
 
-    <div class="bw-phone-wrap">
-      <p class="bw-phone-label">Enter your mobile number to receive an OTP</p>
+    <div class="bw-form-group">
+      <label class="bw-form-label" for="bwContactEmail">Email Address *</label>
+      <input type="email" id="bwContactEmail" class="bw-form-input"
+             placeholder="your@email.com" autocomplete="email"
+             value="${escapeHTML(widgetState.email)}"
+             onkeydown="if(event.key==='Enter')bwSendEmailOTP()"
+             oninput="bwContactInput()"
+             aria-required="true">
+    </div>
+
+    <div class="bw-form-group">
+      <label class="bw-form-label" for="bwContactPhone">Mobile Number *</label>
       <div class="bw-phone-input-row">
         <div class="bw-country-code" aria-label="India +91">
           <span class="bw-flag">🇮🇳</span><span>+91</span>
         </div>
-        <input type="tel" id="bwPhone" class="bw-phone-input"
+        <input type="tel" id="bwContactPhone" class="bw-phone-input"
                placeholder="10-digit mobile number"
                maxlength="10" inputmode="numeric" pattern="[6-9][0-9]{9}"
                autocomplete="tel-national"
-               onkeydown="if(event.key==='Enter')bwSendOTP()"
-               oninput="bwPhoneInput(this)"
-               aria-label="Mobile number" aria-required="true">
+               value="${escapeHTML(widgetState.phone)}"
+               onkeydown="if(event.key==='Enter')bwSendEmailOTP()"
+               oninput="bwContactInput()"
+               aria-required="true">
       </div>
-      <div class="bw-phone-error" id="bwPhoneError" role="alert" aria-live="polite"></div>
+      <div class="bw-phone-error" id="bwContactError" role="alert" aria-live="polite"></div>
     </div>
 
-    <button class="bw-primary-btn" id="bwSendOTPBtn" onclick="bwSendOTP()" disabled>
-      Send OTP
+    <button class="bw-primary-btn" id="bwSendOTPBtn" onclick="bwSendEmailOTP()" disabled>
+      Send Verification Code
     </button>
 
     <p class="bw-privacy-note">
-      Your number is used only for appointment confirmation.
+      Your details are used only for appointment confirmation.
       <a href="#privacy" onclick="showPage('privacy');closeBooking();return false;" style="color:inherit;text-decoration:underline">Privacy Policy</a>
     </p>
   `;
@@ -443,27 +454,27 @@ function renderPhoneScreen() {
 function renderOTPScreen() {
   return `
     <div class="bw-back-row">
-      <button class="bw-back-btn" onclick="bwGoScreen('phone')" aria-label="Go back">
+      <button class="bw-back-btn" onclick="bwGoScreen('contact')" aria-label="Go back">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
-      <span class="bw-screen-title">Enter OTP</span>
+      <span class="bw-screen-title">Enter Verification Code</span>
     </div>
 
     <div class="bw-otp-wrap">
       <p class="bw-otp-label">
-        OTP sent to <strong>+91 ${escapeHTML(widgetState.phone)}</strong>
+        Verification code sent to <strong>${escapeHTML(widgetState.email)}</strong>
       </p>
 
       <div class="bw-otp-input-group" role="group" aria-label="6-digit OTP">
-        ${[0,1,2,3,4,5].map(i =>
-          `<input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]"
+        ${[0, 1, 2, 3, 4, 5].map(i =>
+    `<input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]"
             class="bw-otp-box" id="bwOTPBox${i}"
             autocomplete="${i === 0 ? 'one-time-code' : 'off'}"
-            aria-label="OTP digit ${i+1}"
+            aria-label="OTP digit ${i + 1}"
             onkeydown="bwOTPKey(event,${i})"
             oninput="bwOTPInput(event,${i})"
             onpaste="bwOTPPaste(event)">`
-        ).join('')}
+  ).join('')}
       </div>
 
       <div class="bw-otp-error" id="bwOTPError" role="alert" aria-live="polite"></div>
@@ -476,15 +487,15 @@ function renderOTPScreen() {
       </button>
     </div>
 
-    <button class="bw-primary-btn" id="bwVerifyBtn" onclick="bwVerifyOTP()" disabled>
+    <button class="bw-primary-btn" id="bwVerifyBtn" onclick="bwVerifyEmailOTP()" disabled>
       Verify &amp; Continue
     </button>
   `;
 }
 
 function renderDetailsScreen() {
-  const reasons = ['Pregnancy','Infertility','PCOS','Routine Check-up','Menstrual Issues','Menopause','Ultrasound Review','Vaccination','Other'];
-  const backTarget = widgetState.authenticated ? 'booking' : 'phone';
+  const reasons = ['Pregnancy', 'Infertility', 'PCOS', 'Routine Check-up', 'Menstrual Issues', 'Menopause', 'Ultrasound Review', 'Vaccination', 'Other'];
+  const backTarget = widgetState.authenticated ? 'booking' : 'contact';
   return `
     <div class="bw-back-row">
       <button class="bw-back-btn" onclick="bwGoScreen('${backTarget}')" aria-label="Go back">
@@ -685,7 +696,7 @@ async function bwSelectSlot(time) {
   startReservationTimer();
 
   await bwEnsureAuthChecked();
-  bwGoScreen(widgetState.authenticated ? 'details' : 'phone');
+  bwGoScreen(widgetState.authenticated ? 'details' : 'contact');
 }
 
 function startReservationTimer() {
@@ -695,7 +706,7 @@ function startReservationTimer() {
     const el = document.getElementById('bwReservationTimerVal');
     if (msLeft <= 0) {
       clearInterval(widgetState.reservationTimer);
-      if (['phone', 'otp', 'details', 'confirm'].includes(widgetState.screen)) {
+      if (['contact', 'otp', 'details', 'confirm'].includes(widgetState.screen)) {
         alert('Your held slot has expired. Please pick a time again.');
         widgetState.reservationToken = null;
         widgetState.reservationExpiresAt = null;
@@ -731,21 +742,39 @@ function bwGoScreen(screen) {
   renderWidget();
 }
 
-// ── PHONE / OTP ───────────────────────────────────────────────────────────────
-function bwPhoneInput(el) {
-  el.value = el.value.replace(/\D/g, '').slice(0, 10);
-  widgetState.phone = el.value;
+// ── EMAIL / OTP ───────────────────────────────────────────────────────────────
+function bwContactInput() {
+  const emailEl = document.getElementById('bwContactEmail');
+  const phoneEl = document.getElementById('bwContactPhone');
+  if (phoneEl) phoneEl.value = phoneEl.value.replace(/\D/g, '').slice(0, 10);
+
+  widgetState.email = emailEl ? emailEl.value.trim() : widgetState.email;
+  widgetState.phone = phoneEl ? phoneEl.value : widgetState.phone;
+
+  const emailValid = isValidEmail(widgetState.email);
+  const phoneValid = /^[6-9]\d{9}$/.test(widgetState.phone);
+
   const btn = document.getElementById('bwSendOTPBtn');
-  const valid = /^[6-9]\d{9}$/.test(el.value);
-  if (btn) btn.disabled = !valid;
-  const err = document.getElementById('bwPhoneError');
+  if (btn) btn.disabled = !(emailValid && phoneValid);
+
+  const err = document.getElementById('bwContactError');
   if (err) err.textContent = '';
 }
 
-async function bwSendOTP() {
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+}
+
+async function bwSendEmailOTP() {
+  const email = widgetState.email;
   const phone = widgetState.phone;
+  if (!isValidEmail(email)) {
+    const err = document.getElementById('bwContactError');
+    if (err) err.textContent = 'Enter a valid email address';
+    return;
+  }
   if (!/^[6-9]\d{9}$/.test(phone)) {
-    const err = document.getElementById('bwPhoneError');
+    const err = document.getElementById('bwContactError');
     if (err) err.textContent = 'Enter a valid 10-digit Indian mobile number';
     return;
   }
@@ -753,13 +782,13 @@ async function bwSendOTP() {
   const btn = document.getElementById('bwSendOTPBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
 
-  const res = await bwApi('/send-otp.php', { method: 'POST', body: { phone } });
+  const res = await bwApi('/email-send-otp.php', { method: 'POST', body: { email } });
 
-  if (btn) { btn.disabled = false; btn.textContent = 'Send OTP'; }
+  if (btn) { btn.disabled = false; btn.textContent = 'Send Verification Code'; }
 
   if (!res.success) {
-    const err = document.getElementById('bwPhoneError');
-    if (err) err.textContent = res.error || 'Could not send OTP. Please try again.';
+    const err = document.getElementById('bwContactError');
+    if (err) err.textContent = res.error || 'Could not send the code. Please try again.';
     return;
   }
 
@@ -819,8 +848,8 @@ function startOTPTimer() {
   clearInterval(widgetState.otpTimer);
   widgetState.otpSeconds = 30;
   const resendBtn = document.getElementById('bwResendBtn');
-  const timerEl   = document.getElementById('bwOTPTimer');
-  const valEl     = document.getElementById('bwTimerVal');
+  const timerEl = document.getElementById('bwOTPTimer');
+  const valEl = document.getElementById('bwTimerVal');
   if (resendBtn) resendBtn.disabled = true;
 
   widgetState.otpTimer = setInterval(() => {
@@ -828,7 +857,7 @@ function startOTPTimer() {
     if (valEl) valEl.textContent = `0:${String(widgetState.otpSeconds).padStart(2, '0')}`;
     if (widgetState.otpSeconds <= 0) {
       clearInterval(widgetState.otpTimer);
-      if (timerEl)   timerEl.style.display = 'none';
+      if (timerEl) timerEl.style.display = 'none';
       if (resendBtn) resendBtn.disabled = false;
     }
   }, 1000);
@@ -843,7 +872,7 @@ async function bwResendOTP() {
   const btn = document.getElementById('bwVerifyBtn');
   if (btn) btn.disabled = true;
 
-  const res = await bwApi('/send-otp.php', { method: 'POST', body: { phone: widgetState.phone } });
+  const res = await bwApi('/email-send-otp.php', { method: 'POST', body: { email: widgetState.email } });
   if (!res.success) {
     const err = document.getElementById('bwOTPError');
     if (err) err.textContent = res.error || 'Could not resend OTP.';
@@ -856,31 +885,32 @@ async function bwResendOTP() {
   startOTPTimer();
 }
 
-async function bwVerifyOTP() {
+async function bwVerifyEmailOTP() {
   const otp = widgetState.otp;
   if (otp.length < 6) return;
 
   const btn = document.getElementById('bwVerifyBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
 
-  const res = await bwApi('/verify-otp.php', {
+  const res = await bwApi('/email-verify-otp.php', {
     method: 'POST',
-    body: { phone: widgetState.phone, otp },
+    body: { email: widgetState.email, otp },
   });
 
   if (btn) { btn.disabled = false; btn.textContent = 'Verify & Continue'; }
 
   if (!res.success) {
     const err = document.getElementById('bwOTPError');
-    if (err) err.textContent = res.error || 'Incorrect OTP. Please try again.';
+    if (err) err.textContent = res.error || 'Incorrect code. Please try again.';
     return;
   }
 
   clearInterval(widgetState.otpTimer);
   widgetState.authenticated = true;
   widgetState.patient = res.patient;
-  if (res.patient?.name) widgetState.name = res.patient.name;
+  if (res.patient?.name)  widgetState.name  = res.patient.name;
   if (res.patient?.email) widgetState.email = res.patient.email;
+  if (res.patient?.phone) widgetState.phone = res.patient.phone;
 
   widgetState.screen = 'details';
   renderWidget();
@@ -891,7 +921,7 @@ async function bwVerifyOTP() {
 function bwSelectReason(r) {
   widgetState.reason = widgetState.reason === r ? '' : r;
   const chips = document.querySelector('.bw-reason-chips');
-  const reasons = ['Pregnancy','Infertility','PCOS','Routine Check-up','Menstrual Issues','Menopause','Ultrasound Review','Vaccination','Other'];
+  const reasons = ['Pregnancy', 'Infertility', 'PCOS', 'Routine Check-up', 'Menstrual Issues', 'Menopause', 'Ultrasound Review', 'Vaccination', 'Other'];
   if (chips) chips.innerHTML = reasons.map(re =>
     `<button class="bw-chip ${widgetState.reason === re ? 'selected' : ''}"
       onclick="bwSelectReason('${re}')" aria-pressed="${widgetState.reason === re}">${re}</button>`
@@ -908,7 +938,7 @@ function bwCheckDetails() {
 // ── CONFIRM ───────────────────────────────────────────────────────────────────
 function bwCheckConsent() {
   const btn = document.getElementById('bwFinalConfirmBtn');
-  const cb  = document.getElementById('bwConsent');
+  const cb = document.getElementById('bwConsent');
   if (btn) btn.disabled = !cb?.checked;
 }
 
@@ -1045,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', injectBookingWidget);
 // Stops on mouseleave. Scrolls 7 days worth of content in each direction.
 (function initDateHoverScroll() {
   let _scrollTimer = null;
-  const SPEED  = 2.5;  // px per animation frame
+  const SPEED = 2.5;  // px per animation frame
   const SCROLL_DIRECTION = { left: -1, right: 1 };
 
   function stopScroll() {
@@ -1061,7 +1091,7 @@ document.addEventListener('DOMContentLoaded', injectBookingWidget);
       strip.scrollLeft += SPEED * direction;
       // Stop when we hit the boundary
       const atStart = strip.scrollLeft <= 0;
-      const atEnd   = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1;
+      const atEnd = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1;
       if ((direction < 0 && atStart) || (direction > 0 && atEnd)) {
         stopScroll();
         return;
@@ -1073,12 +1103,12 @@ document.addEventListener('DOMContentLoaded', injectBookingWidget);
 
   // Re-bind whenever the booking screen re-renders (sentinels are re-created)
   function bindSentinels() {
-    const left  = document.getElementById('bwScrollLeft');
+    const left = document.getElementById('bwScrollLeft');
     const right = document.getElementById('bwScrollRight');
     if (!left || !right) return;
 
-    left.addEventListener('mouseenter',  () => startScroll(SCROLL_DIRECTION.left));
-    left.addEventListener('mouseleave',  stopScroll);
+    left.addEventListener('mouseenter', () => startScroll(SCROLL_DIRECTION.left));
+    left.addEventListener('mouseleave', stopScroll);
     right.addEventListener('mouseenter', () => startScroll(SCROLL_DIRECTION.right));
     right.addEventListener('mouseleave', stopScroll);
 
