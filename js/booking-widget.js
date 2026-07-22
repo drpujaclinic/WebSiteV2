@@ -889,6 +889,12 @@ async function bwVerifyEmailOTP() {
   const otp = widgetState.otp;
   if (otp.length < 6) return;
 
+  if (!/^[6-9]\d{9}$/.test(widgetState.phone)) {
+    const err = document.getElementById('bwOTPError');
+    if (err) err.textContent = 'Your mobile number looks incomplete — please go back and re-enter it.';
+    return;
+  }
+
   const btn = document.getElementById('bwVerifyBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
 
@@ -908,7 +914,7 @@ async function bwVerifyEmailOTP() {
   clearInterval(widgetState.otpTimer);
   widgetState.authenticated = true;
   widgetState.patient = res.patient;
-  if (res.patient?.name)  widgetState.name  = res.patient.name;
+  if (res.patient?.name) widgetState.name = res.patient.name;
   if (res.patient?.email) widgetState.email = res.patient.email;
   if (res.patient?.phone) widgetState.phone = res.patient.phone;
 
