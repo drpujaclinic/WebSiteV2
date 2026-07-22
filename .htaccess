@@ -24,7 +24,7 @@
 
   # Cache JavaScript files for 1 month
   ExpiresByType application/javascript "access plus 1 month"
-  ExpiresByType text/javascript "access plus 1 month"
+  ExpiresByType text/javascript "access plus 1 minute"
 
   ExpiresByType image/jpeg "access plus 6 months"
   ExpiresByType image/png "access plus 6 months"
