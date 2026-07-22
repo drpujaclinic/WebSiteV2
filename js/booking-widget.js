@@ -42,6 +42,9 @@ const widgetState = {
   email: '',
   reason: '',
   presetLocId: null,
+  recognized: false,               // pre-auth "welcome back" signal only — never carries PII
+  _lastRecognizeCheckedPhone: '',
+  _lastRecognizeCheckedEmail: '',
 };
 
 function apiConsultType() {
@@ -59,6 +62,7 @@ function openBooking(locationId) {
     reservationToken: null, reservationExpiresAt: null,
     phone: '', otp: '', name: '', email: '', reason: '',
     presetLocId: locationId || null,
+    recognized: false, _lastRecognizeCheckedPhone: '', _lastRecognizeCheckedEmail: '',
   });
   clearInterval(widgetState.otpTimer);
   clearInterval(widgetState.reservationTimer);
@@ -419,6 +423,7 @@ function renderContactScreen() {
              value="${escapeHTML(widgetState.email)}"
              onkeydown="if(event.key==='Enter')bwSendEmailOTP()"
              oninput="bwContactInput()"
+             onblur="bwContactEmailBlur()"
              aria-required="true">
     </div>
 
@@ -439,6 +444,7 @@ function renderContactScreen() {
       </div>
       <div class="bw-phone-error" id="bwContactError" role="alert" aria-live="polite"></div>
     </div>
+    <div id="bwRecognizedBadge">${widgetState.recognized ? renderRecognizedBadgeHTML() : ''}</div>
 
     <button class="bw-primary-btn" id="bwSendOTPBtn" onclick="bwSendEmailOTP()" disabled>
       Send Verification Code
@@ -1008,7 +1014,7 @@ function buildSuccessWAMessage() {
     `Phone: +91 ${s.phone || s.patient?.phone || ''}`,
     `Type: ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
     s.location && s.type !== 'video' ? `Location: ${s.location.name}` : '',
-    `Date: ${dl}`,`Time: ${s.time}`,
+    `Date: ${dl}`, `Time: ${s.time}`,
     `Fee: ${fee}`,
     s.reason ? `Reason: ${s.reason}` : '',
   ].filter(Boolean).join('\n');
@@ -1026,7 +1032,7 @@ function buildDoctorWAMessage() {
     `Phone: +91 ${s.phone || s.patient?.phone || ''}`,
     `Type: ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
     s.location && s.type !== 'video' ? `Location: ${s.location.name}` : '',
-    `Date: ${dl}`,`Time: ${s.time}`,
+    `Date: ${dl}`, `Time: ${s.time}`,
     `Fee: ${fee}`,
     s.reason ? `Reason: ${s.reason}` : '',
     ``,

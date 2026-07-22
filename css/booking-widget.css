@@ -880,6 +880,22 @@
   color: #8fa8ad;
 }
 
+.bw-recognized-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 var(--bw-pad) 14px;
+  padding: 10px 14px;
+  background: #eff6ef;
+  border: 1px solid rgba(107, 158, 107, 0.25);
+  border-radius: 10px;
+  color: #4a7a4a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bw-recognized-badge svg { flex-shrink: 0; color: #6b9e6b; }
+
 .bw-form-input {
   width: 100%;
   padding: 12px 14px;
