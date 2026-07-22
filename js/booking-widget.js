@@ -1000,18 +1000,17 @@ function buildSuccessWAMessage() {
   const dl = formatDateForDisplay(s.date);
   const fee = s.type === 'video' ? '₹800' : (s.location?.fee || '₹800');
   return [
-    `Hi Dr. Puja's Clinic! 🙏`,
+    `Hi Dr. Puja's Clinic! `,
     `I'd like to confirm my appointment:`,
     ``,
     `Booking ID: ${s.bookingRef || ''}`,
     `Name: ${s.name}`,
     `Phone: +91 ${s.phone || s.patient?.phone || ''}`,
     `Type: ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
-    s.location && s.type !== 'video' ? `📍 Location: ${s.location.name}` : '',
-    `Date: ${dl}`,
-    `Time: ${s.time}`,
+    s.location && s.type !== 'video' ? `Location: ${s.location.name}` : '',
+    `Date: ${dl}`,`Time: ${s.time}`,
     `Fee: ${fee}`,
-    s.reason ? `💬 Reason: ${s.reason}` : '',
+    s.reason ? `Reason: ${s.reason}` : '',
   ].filter(Boolean).join('\n');
 }
 
@@ -1020,17 +1019,16 @@ function buildDoctorWAMessage() {
   const dl = formatDateForDisplay(s.date);
   const fee = s.type === 'video' ? '₹800' : (s.location?.fee || '₹800');
   return [
-    `🔔 *New Appointment*`,
+    `*New Appointment*`,
     ``,
-    `🔖 Booking ID: ${s.bookingRef || ''}`,
-    `👤 Patient: ${s.name}`,
-    `📱 Phone: +91 ${s.phone || s.patient?.phone || ''}`,
-    `📋 Type: ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
-    s.location && s.type !== 'video' ? `📍 Location: ${s.location.name}` : '',
-    `📅 Date: ${dl}`,
-    `⏰ Time: ${s.time}`,
-    `💰 Fee: ${fee}`,
-    s.reason ? `💬 Reason: ${s.reason}` : '',
+    `Booking ID: ${s.bookingRef || ''}`,
+    `Patient: ${s.name}`,
+    `Phone: +91 ${s.phone || s.patient?.phone || ''}`,
+    `Type: ${s.type === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}`,
+    s.location && s.type !== 'video' ? `Location: ${s.location.name}` : '',
+    `Date: ${dl}`,`Time: ${s.time}`,
+    `Fee: ${fee}`,
+    s.reason ? `Reason: ${s.reason}` : '',
     ``,
     `— drpujaprasad.in`,
   ].filter(Boolean).join('\n');
