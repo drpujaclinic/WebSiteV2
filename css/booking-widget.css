@@ -2,30 +2,31 @@
 
 /* Persistant Clinic Title Branding Header */
 .branding-header {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1e293b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    text-align: center;
-    flex: 1;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  flex: 1;
 }
 
 /* Horizontal Location Switcher Tabs (Practo Style) */
 .location-tabs-container {
-    width: 100%;
-    margin-bottom: 16px;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 4px;
+  width: 100%;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 4px;
 }
 
 .location-tabs-scroll {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 4px 8px;
-    scrollbar-width: none; /* Hide scrollbars Firefox */
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 4px 8px;
+  scrollbar-width: none;
+  /* Hide scrollbars Firefox */
 }
 
 /* ── SHEET — mobile bottom sheet ─────────────────────────── */
@@ -38,6 +39,7 @@
   background: #ffffff;
   width: 100%;
   max-height: 92vh;
+  max-height: 92dvh; /* modern mobile browsers: avoids clipping under address bar chrome */
   border-radius: 20px 20px 0 0;
   display: flex;
   flex-direction: column;
@@ -48,22 +50,23 @@
 }
 
 .location-tab {
-    background: #f1f5f9;
-    color: #64748b;
-    border: 1px solid #cbd5e1;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .location-tab.active {
-    background: #0f766e; /* Professional Teal Accent color */
-    color: #ffffff;
-    border-color: #0f766e;
-    box-shadow: 0 2px 4px rgba(15, 118, 110, 0.2);
+  background: #0f766e;
+  /* Professional Teal Accent color */
+  color: #ffffff;
+  border-color: #0f766e;
+  box-shadow: 0 2px 4px rgba(15, 118, 110, 0.2);
 }
 
 /* Date Selector Grid with Vertical Month Indicator Sidebar */
@@ -73,6 +76,8 @@
   display: none;
   position: fixed;
   inset: 0;
+  height: 100vh;
+  height: 100dvh; /* accounts for mobile browser address bar, prevents overlay cutoff */
   z-index: 2000;
   background: rgba(18, 40, 45, 0.55);
   backdrop-filter: blur(4px);
@@ -88,8 +93,13 @@
 }
 
 @keyframes bwFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* ── DESKTOP modal override — must be inside @media ─────────── */
@@ -97,6 +107,7 @@
   .bw-overlay {
     align-items: center;
   }
+
   .bw-sheet {
     --bw-pad: 28px;
     --bw-pill-w: 79px;
@@ -106,8 +117,9 @@
     transform: translateY(16px) scale(0.98);
     opacity: 0;
     transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
-                opacity 0.25s ease;
+      opacity 0.25s ease;
   }
+
   .bw-sheet.in {
     transform: translateY(0) scale(1);
     opacity: 1;
@@ -126,7 +138,9 @@
 }
 
 @media (min-width: 769px) {
-  .bw-drag-handle { display: none; }
+  .bw-drag-handle {
+    display: none;
+  }
 }
 
 /* ── SHEET HEADER ─────────────────────────────────────────── */
@@ -144,6 +158,8 @@
   font-weight: 600;
   color: #12282d;
   font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  margin: 0;
+  line-height: 1.3;
 }
 
 .bw-close-btn {
@@ -175,7 +191,9 @@
   padding: 0 0 24px;
 }
 
-.bw-body::-webkit-scrollbar { width: 0; }
+.bw-body::-webkit-scrollbar {
+  width: 0;
+}
 
 /* ── TAB SWITCHER ─────────────────────────────────────────── */
 .bw-tabs {
@@ -294,7 +312,10 @@
   transition: color 0.15s;
 }
 
-.bw-more-locs:hover { color: #12282d; }
+.bw-more-locs:hover {
+  color: #12282d;
+}
+
 /* ── LOCATION LOGO AVATARS (stacked row next to +N More Locations) ────────── */
 .bw-more-locs-row {
   display: flex;
@@ -318,7 +339,7 @@
   background: #f0f9fb;
   flex-shrink: 0;
   margin-left: -8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .bw-loc-avatars .bw-loc-avatar:first-child {
@@ -403,7 +424,10 @@
   scrollbar-width: none;
 }
 
-.bw-date-scroll::-webkit-scrollbar { display: none; }
+.bw-date-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── DATE STRIP HOVER-SCROLL ──────────────────────────────────
    Wrap .bw-date-scroll in .bw-date-scroll-wrap. Left/right sentinel
    divs sit at the edges; JS listens to mouseenter/mouseleave on them
@@ -427,12 +451,12 @@
 
 .bw-date-scroll-wrap::before {
   left: 0;
-  background: linear-gradient(to right, rgba(255,255,255,0.9), transparent);
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.9), transparent);
 }
 
 .bw-date-scroll-wrap::after {
   right: 0;
-  background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
 }
 
 /* Sentinel hover zones — invisible, positioned at left/right edges */
@@ -445,8 +469,13 @@
   cursor: pointer;
 }
 
-.bw-scroll-sentinel-left  { left:  0; }
-.bw-scroll-sentinel-right { right: 0; }
+.bw-scroll-sentinel-left {
+  left: 0;
+}
+
+.bw-scroll-sentinel-right {
+  right: 0;
+}
 
 
 /* Vertical month label — writing-mode on the element itself so it works
@@ -538,10 +567,21 @@
   margin-top: 1px;
 }
 
-.bw-ind-open   { background: #27ae60; }
-.bw-ind-few    { background: #eda100; }
-.bw-ind-full   { background: #e34948; }
-.bw-ind-closed { background: #c8c4be; }
+.bw-ind-open {
+  background: #27ae60;
+}
+
+.bw-ind-few {
+  background: #eda100;
+}
+
+.bw-ind-full {
+  background: #e34948;
+}
+
+.bw-ind-closed {
+  background: #c8c4be;
+}
 
 /* ── SLOTS SECTION ────────────────────────────────────────── */
 .bw-slots-section {
@@ -558,7 +598,9 @@
   padding-bottom: 4px;
 }
 
-.bw-slots-preview::-webkit-scrollbar { display: none; }
+.bw-slots-preview::-webkit-scrollbar {
+  display: none;
+}
 
 /* Individual time slot button */
 .bw-slot {
@@ -619,7 +661,9 @@
   transition: color 0.15s;
 }
 
-.bw-see-all:hover { color: #12282d; }
+.bw-see-all:hover {
+  color: #12282d;
+}
 
 /* Expanded slots view */
 .bw-slots-expanded {
@@ -755,14 +799,17 @@
   flex-shrink: 0;
 }
 
-.bw-flag { font-size: 18px; }
+.bw-flag {
+  font-size: 18px;
+}
 
 .bw-phone-input {
   flex: 1;
   border: none;
   outline: none;
   padding: 13px 14px;
-  font-size: 16px; /* 16px prevents iOS zoom */
+  font-size: 16px;
+  /* 16px prevents iOS zoom */
   color: #12282d;
   background: #ffffff;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
@@ -770,7 +817,13 @@
   min-width: 0;
 }
 
-.bw-phone-input::placeholder { color: #c8c4be; }
+.bw-phone-input::placeholder {
+  color: #6b8a90;
+}
+
+.bw-form-input::placeholder {
+  color: #6b8a90;
+}
 
 .bw-phone-error {
   font-size: 12px;
@@ -821,8 +874,16 @@
 }
 
 @media (max-width: 360px) {
-  .bw-otp-box { width: 40px; height: 48px; font-size: 18px; gap: 6px; }
-  .bw-otp-input-group { gap: 6px; }
+  .bw-otp-box {
+    width: 40px;
+    height: 48px;
+    font-size: 18px;
+    gap: 6px;
+  }
+
+  .bw-otp-input-group {
+    gap: 6px;
+  }
 }
 
 .bw-otp-error {
@@ -859,7 +920,9 @@
   cursor: default;
 }
 
-.bw-resend-btn:not(:disabled):hover { color: #12282d; }
+.bw-resend-btn:not(:disabled):hover {
+  color: #12282d;
+}
 
 /* ── FORM ELEMENTS ────────────────────────────────────────── */
 .bw-form-group {
@@ -894,14 +957,17 @@
   font-weight: 600;
 }
 
-.bw-recognized-badge svg { flex-shrink: 0; color: #6b9e6b; }
+.bw-recognized-badge svg {
+  flex-shrink: 0;
+  color: #6b9e6b;
+}
 
 .bw-form-input {
   width: 100%;
   padding: 12px 14px;
   border: 1.5px solid #e3dad0;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 16px;
   color: #12282d;
   background: #ffffff;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
@@ -914,7 +980,9 @@
   box-shadow: 0 0 0 3px rgba(31, 122, 140, 0.08);
 }
 
-.bw-form-input.error { border-color: #e34948; }
+.bw-form-input.error {
+  border-color: #e34948;
+}
 
 /* Reason chips */
 .bw-reason-chips {
@@ -967,7 +1035,9 @@
   border-bottom: 1px solid #f0ede8;
 }
 
-.bw-summary-row:last-child { border-bottom: none; }
+.bw-summary-row:last-child {
+  border-bottom: none;
+}
 
 .bw-summary-fee {
   background: #fbf4e4;
@@ -1176,7 +1246,9 @@
   box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
 }
 
-.bw-wa-btn:hover { background: #1aab52; }
+.bw-wa-btn:hover {
+  background: #1aab52;
+}
 
 .bw-done-btn {
   padding: 14px;
@@ -1206,19 +1278,25 @@
 /* Screen reader only */
 .bw-sr-only {
   position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-  clip: rect(0,0,0,0);
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
 
 /* ── REDUCED MOTION ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+
   .bw-sheet,
   .bw-overlay,
   .bw-slot,
   .bw-date-pill,
-  .bw-primary-btn { transition: none !important; animation: none !important; }
+  .bw-primary-btn {
+    transition: none !important;
+    animation: none !important;
+  }
 }

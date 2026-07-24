@@ -189,7 +189,10 @@ async function mbVerifyOtp() {
 
 async function mbLoadAppointments() {
     const res = await bwApi('/profile.php', { method: 'GET' });
-    if (res.success) mbState.appointments = { upcoming: res.upcoming || [], past: res.past || [] };
+    if (res.success) {
+        mbState.appointments = { upcoming: res.upcoming || [], past: res.past || [] };
+        if (res.patient) mbState.patient = res.patient; // always trust the DB's current name, not the login-time snapshot
+    }
 }
 
 function renderMbListScreen() {
@@ -208,12 +211,12 @@ function renderMbListScreen() {
     </div>`;
 
     return `
-    <div class="bw-sheet-header" style="padding:0 0 16px;border:none;">
+    <div style="padding:16px var(--bw-pad) 8px;">
       <span class="bw-screen-title">Hi ${escapeHTML(mbState.patient?.name || 'there')}</span>
     </div>
-    <div style="padding:0 var(--bw-pad) 8px;font-size:12px;font-weight:700;color:#8fa8ad;text-transform:uppercase;letter-spacing:0.08em;">Upcoming</div>
-    ${upcoming.length ? upcoming.map(card).join('') : `<p style="padding:0 var(--bw-pad) 16px;font-size:13px;color:#8fa8ad;">No upcoming appointments.</p>`}
-    ${past.length ? `<div style="padding:8px var(--bw-pad) 8px;font-size:12px;font-weight:700;color:#8fa8ad;text-transform:uppercase;letter-spacing:0.08em;">Past</div>${past.map(card).join('')}` : ''}
+    <div style="padding:0 var(--bw-pad) 8px;font-size:12px;font-weight:700;color:#5c7a80;text-transform:uppercase;letter-spacing:0.08em;">Upcoming</div>
+    ${upcoming.length ? upcoming.map(card).join('') : `<p style="padding:0 var(--bw-pad) 16px;font-size:13px;color:#5c7a80;">No upcoming appointments.</p>`}
+    ${past.length ? `<div style="padding:8px var(--bw-pad) 8px;font-size:12px;font-weight:700;color:#5c7a80;text-transform:uppercase;letter-spacing:0.08em;">Past</div>${past.map(card).join('')}` : ''}
   `;
 }
 
