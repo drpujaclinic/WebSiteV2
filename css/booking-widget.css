@@ -1281,7 +1281,84 @@
     color: #1f7a8c;
   }
 
-  /* ── ACCESSIBILITY ────────────────────────────────────────── */
+  /* ── MANAGE BOOKING: date strip (independent from .bw-date-* to avoid touching the proven-working main widget) ── */
+.mb-date-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding: 4px 24px 10px 20px;
+  scrollbar-width: none;
+}
+.mb-date-scroll::-webkit-scrollbar { display: none; }
+
+.mb-date-pill {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 52px;
+  padding: 8px 6px 7px;
+  border: 1.5px solid #e3dad0;
+  border-radius: 12px;
+  background: #ffffff;
+  cursor: pointer;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+}
+.mb-date-pill.selected { border-color: #12282d; box-shadow: 0 0 0 1px #12282d; }
+.mb-date-pill:hover:not(.selected) { border-color: #1f7a8c; }
+
+.mb-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 20px;
+}
+.mb-slots-grid .bw-slot { min-width: 0; padding: 9px 4px; font-size: 12px; min-height: 40px; }
+@media (min-width: 420px) {
+  .mb-slots-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.mb-view-more-btn {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 8px 20px 4px;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f7a8c;
+  background: none;
+  border: 1.5px dashed #e3dad0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.mb-past-details summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5c7a80;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mb-past-details summary::-webkit-details-marker { display: none; }
+.mb-past-details summary::before {
+  content: '›';
+  display: inline-block;
+  transition: transform 0.15s;
+}
+.mb-past-details[open] summary::before { transform: rotate(90deg); }
+
+/* ── ACCESSIBILITY ────────────────────────────────────────── */
   .bw-sheet *:focus-visible {
     outline: 2px solid #1f7a8c;
     outline-offset: 2px;
