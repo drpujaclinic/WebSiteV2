@@ -36,8 +36,7 @@ function mbFindAppointment(ref) {
 function openManageBooking() {
     const overlay = document.getElementById('mbOverlay');
     if (!overlay) return;
-    Object.assign(mbState, { screen: 'login', email: '', phone: '', otp: '' });
-lastAction: null });
+    Object.assign(mbState, { screen: 'login', email: '', phone: '', otp: '', lastAction: null });
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     renderMbWidget();
