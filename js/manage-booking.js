@@ -8,19 +8,26 @@
 'use strict';
 
 const mbState = {
-    screen: 'login', // 'login' | 'otp' | 'list' | 'reschedule' | 'cancel'
-    email: '', phone: '', otp: '',
-    otpTimer: null, otpSeconds: 30,
-    patient: null,
-    appointments: { upcoming: [], past: [] },
-    actionTarget: null, // the appointment object currently being rescheduled/cancelled
-    cancelReason: '',
-    reschedule: {
-        date: '', time: null,
-        slotsData: { morning: [], evening: [] }, slotsLoading: false,
-        reservationToken: null, reservationExpiresAt: null,
-    },
+  screen: 'login', // 'login' | 'otp' | 'list' | 'reschedule' | 'cancel'
+  email: '', phone: '', otp: '',
+  otpTimer: null, otpSeconds: 30,
+  patient: null,
+  appointments: { upcoming: [], past: [] },
+  actionTarget: null,
+  cancelReason: '',
+  lastAction: null, // null | 'rescheduled' | 'cancelled' — drives the one-time success header
+  reschedule: {
+    date: '', time: null,
+    slotsData: { morning: [], evening: [] }, slotsLoading: false,
+    slotsExpanded: false,
+    reservationToken: null, reservationExpiresAt: null,
+  },
 };
+
+function mbSetHeaderTitle(text) {
+  const el = document.getElementById('mbSheetTitle');
+  if (el) el.textContent = text;
+}
 
 function mbFindAppointment(ref) {
     return [...mbState.appointments.upcoming, ...mbState.appointments.past].find(a => a.booking_ref === ref) || null;
@@ -30,6 +37,7 @@ function openManageBooking() {
     const overlay = document.getElementById('mbOverlay');
     if (!overlay) return;
     Object.assign(mbState, { screen: 'login', email: '', phone: '', otp: '' });
+lastAction: null });
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     renderMbWidget();
@@ -54,9 +62,18 @@ function closeMbOutside(e) {
 }
 
 function renderMbWidget() {
-    const body = document.getElementById('mbBody');
-    if (!body) return;
-    switch (mbState.screen) {
+  const body = document.getElementById('mbBody');
+  if (!body) return;
+  const titles = {
+    login: 'Manage Booking', otp: 'Manage Booking',
+    list: mbState.lastAction === 'rescheduled' ? 'Appointment Rescheduled'
+        : mbState.lastAction === 'cancelled' ? 'Appointment Cancelled'
+        : 'Manage Booking',
+    reschedule: `Manage Booking: Reschedule - ${mbState.actionTarget?.booking_ref || ''}`,
+    cancel: `Manage Booking: Cancel - ${mbState.actionTarget?.booking_ref || ''}`,
+  };
+  mbSetHeaderTitle(titles[mbState.screen] || 'Manage Booking');
+  switch (mbState.screen) {
         case 'login': body.innerHTML = renderMbLoginScreen(); break;
         case 'otp': body.innerHTML = renderMbOtpScreen(); break;
         case 'list': body.innerHTML = renderMbListScreen(); break;
@@ -217,27 +234,44 @@ async function mbLoadAppointments() {
 }
 
 function renderMbListScreen() {
-    const { upcoming, past } = mbState.appointments;
-    const card = (a) => `
-    <div class="bw-summary-card" style="margin:0 var(--bw-pad) 12px;">
+  const { upcoming, past } = mbState.appointments;
+  const name = escapeHTML(mbState.patient?.name || 'there');
+  mbState.lastAction = null; // shown once — clears once this screen renders
+
+  const card = (a) => `
+    <div class="bw-summary-card" style="margin:0 var(--bw-pad) 10px;">
       <div class="bw-summary-row"><span class="bw-summary-label">Booking ID</span><span class="bw-summary-val">${escapeHTML(a.booking_ref)}</span></div>
-      <div class="bw-summary-row"><span class="bw-summary-label">Date &amp; Time</span><span class="bw-summary-val">${new Date(a.date + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })} at ${escapeHTML(a.time)}</span></div>
+      <div class="bw-summary-row"><span class="bw-summary-label">Date &amp; Time</span><span class="bw-summary-val">${new Date(a.date + 'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})} at ${escapeHTML(a.time)}</span></div>
       <div class="bw-summary-row"><span class="bw-summary-label">Location</span><span class="bw-summary-val">${a.consult_type === 'video' ? 'Video' : escapeHTML(a.location?.name || '')}</span></div>
-      <div class="bw-summary-row"><span class="bw-summary-label">Status</span><span class="bw-summary-val" style="text-transform:capitalize;">${escapeHTML(a.status)}</span></div>
-       ${a.status === 'confirmed' ? `
+      ${a.status !== 'confirmed' ? `<div class="bw-summary-row"><span class="bw-summary-label">Status</span><span class="bw-summary-val" style="text-transform:capitalize;">${escapeHTML(a.status)}</span></div>` : ''}
+      ${a.status === 'confirmed' ? `
       <div style="display:flex;gap:8px;padding:10px 14px 4px;">
         <button class="btn btn-outline btn-sm" onclick="mbOpenReschedule('${a.booking_ref}')">Reschedule</button>
         <button class="btn btn-outline btn-sm" onclick="mbOpenCancel('${a.booking_ref}')">Cancel</button>
       </div>` : ''}
     </div>`;
 
+  if (upcoming.length === 0) {
     return `
-    <div style="padding:16px var(--bw-pad) 8px;">
-      <span class="bw-screen-title">Hi ${escapeHTML(mbState.patient?.name || 'there')}</span>
-    </div>
-    <div style="padding:0 var(--bw-pad) 8px;font-size:12px;font-weight:700;color:#5c7a80;text-transform:uppercase;letter-spacing:0.08em;">Upcoming</div>
-    ${upcoming.length ? upcoming.map(card).join('') : `<p style="padding:0 var(--bw-pad) 16px;font-size:13px;color:#5c7a80;">No upcoming appointments.</p>`}
-    ${past.length ? `<div style="padding:8px var(--bw-pad) 8px;font-size:12px;font-weight:700;color:#5c7a80;text-transform:uppercase;letter-spacing:0.08em;">Past</div>${past.map(card).join('')}` : ''}
+      <p style="padding:16px var(--bw-pad);font-size:14px;color:#12282d;margin:0;">Hi ${name} — No upcoming appointments.</p>
+      ${past.length ? renderMbPastAccordion(past, card) : ''}
+    `;
+  }
+
+  return `
+    <div style="padding:16px var(--bw-pad) 4px;font-size:14px;color:#12282d;font-weight:600;">Hi ${name}</div>
+    <div style="padding:0 var(--bw-pad) 8px;font-size:12px;font-weight:700;color:#5c7a80;text-transform:uppercase;letter-spacing:0.08em;">Upcoming · Confirmed</div>
+    ${upcoming.map(card).join('')}
+    ${past.length ? renderMbPastAccordion(past, card) : ''}
+  `;
+}
+
+function renderMbPastAccordion(past, cardFn) {
+  return `
+    <details class="mb-past-details">
+      <summary>Past (${past.length})</summary>
+      <div style="padding-top:4px;">${past.map(cardFn).join('')}</div>
+    </details>
   `;
 }
 
@@ -253,11 +287,10 @@ function renderMbCancelScreen() {
   const a = mbState.actionTarget;
   if (!a) { mbState.screen = 'list'; renderMbWidget(); return ''; }
   return `
-    <div class="bw-back-row">
+    <div class="bw-back-row" style="padding-top:12px;">
       <button class="bw-back-btn" onclick="mbState.screen='list';renderMbWidget();" aria-label="Go back">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
-      <span class="bw-screen-title">Cancel Appointment</span>
     </div>
     <div class="bw-summary-card" style="margin:0 var(--bw-pad) 16px;">
       <div class="bw-summary-row"><span class="bw-summary-label">Booking ID</span><span class="bw-summary-val">${escapeHTML(a.booking_ref)}</span></div>
@@ -290,6 +323,7 @@ async function mbConfirmCancel() {
     if (err) err.textContent = res.error || 'Could not cancel. Please try again.';
     return;
   }
+  mbState.lastAction = 'cancelled';
   await mbLoadAppointments();
   mbState.actionTarget = null;
   mbState.screen = 'list';
@@ -324,16 +358,13 @@ function renderMbRescheduleScreen() {
   const a = mbState.actionTarget;
   if (!a) { mbState.screen = 'list'; renderMbWidget(); return ''; }
   return `
-    <div class="bw-back-row">
+    <div class="bw-back-row" style="padding-top:12px;">
       <button class="bw-back-btn" onclick="mbState.screen='list';renderMbWidget();" aria-label="Go back">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
-      <span class="bw-screen-title">Reschedule — ${escapeHTML(a.booking_ref)}</span>
     </div>
-    <div class="bw-date-strip" role="group" aria-label="Select a new date">
-      <div class="bw-date-scroll" id="mbDateScroll">${mbBuildDateStrip()}</div>
-    </div>
-    <div class="bw-slots-section" id="mbSlotsSection" aria-live="polite">${mbRenderSlotsHTML()}</div>
+    <div class="mb-date-scroll" id="mbDateScroll" role="group" aria-label="Select a new date">${mbBuildDateStrip()}</div>
+    <div class="bw-slots-section" id="mbSlotsSection" aria-live="polite" style="padding-top:4px;">${mbRenderSlotsHTML()}</div>
     <div class="bw-confirm-error" id="mbRescheduleError" role="alert" aria-live="polite" style="color:#e34948;font-size:12px;text-align:center;padding:0 20px 8px;"></div>
   `;
 }
@@ -348,7 +379,7 @@ function mbBuildDateStrip() {
     const ds = formatDateStr(d);
     const isSelected = mbState.reschedule.date === ds;
     const dayLabel = i === 0 ? 'Today' : i === 1 ? 'Tom' : String(d.getDate());
-    items.push(`<button class="bw-date-pill ${isSelected ? 'selected' : ''}" onclick="mbSelectDate('${ds}')"
+    items.push(`<button class="mb-date-pill ${isSelected ? 'selected' : ''}" onclick="mbSelectDate('${ds}')"
       aria-label="${days[d.getDay()]} ${d.getDate()}" aria-pressed="${isSelected}">
       <span class="bw-date-label">${dayLabel}</span><span class="bw-date-day">${days[d.getDay()]}</span></button>`);
   }
@@ -360,14 +391,29 @@ function mbSlotPill(time) {
   return `<button class="bw-slot ${selected ? 'selected' : ''}" onclick="mbSelectSlot('${time}')" aria-pressed="${selected}">${time}</button>`;
 }
 
+const MB_SLOTS_PREVIEW_COUNT = 6;
+
 function mbRenderSlotsHTML() {
-  const { morning, evening } = mbState.reschedule.slotsData;
+  const { morning, evening, slotsExpanded } = mbState.reschedule;
   if (mbState.reschedule.slotsLoading) return `<div class="bw-no-slots">Loading times…</div>`;
-  if (morning.length + evening.length === 0) return `<div class="bw-no-slots">No slots available on this date. Please choose another date.</div>`;
-  const groups = [];
-  if (morning.length) groups.push(`<div class="bw-slot-group"><div class="bw-slot-group-label">Morning</div><div class="bw-slots-grid">${morning.map(mbSlotPill).join('')}</div></div>`);
-  if (evening.length) groups.push(`<div class="bw-slot-group"><div class="bw-slot-group-label">Evening</div><div class="bw-slots-grid">${evening.map(mbSlotPill).join('')}</div></div>`);
-  return `<div class="bw-slots-expanded">${groups.join('')}</div>`;
+  const total = morning.length + evening.length;
+  if (total === 0) return `<div class="bw-no-slots">No slots available on this date. Please choose another date.</div>`;
+
+  const all = [...morning.map(t => ({ t, group: 'Morning' })), ...evening.map(t => ({ t, group: 'Evening' }))];
+  const shown = slotsExpanded ? all : all.slice(0, MB_SLOTS_PREVIEW_COUNT);
+
+  const groups = {};
+  shown.forEach(({ t, group }) => { (groups[group] = groups[group] || []).push(t); });
+
+  const groupsHTML = Object.entries(groups).map(([label, times]) =>
+    `<div class="bw-slot-group"><div class="bw-slot-group-label">${label}</div><div class="mb-slots-grid">${times.map(mbSlotPill).join('')}</div></div>`
+  ).join('');
+
+  const moreBtn = !slotsExpanded && all.length > MB_SLOTS_PREVIEW_COUNT
+    ? `<button class="mb-view-more-btn" onclick="mbState.reschedule.slotsExpanded=true;document.getElementById('mbSlotsSection').innerHTML=mbRenderSlotsHTML();">View more slots (${all.length - MB_SLOTS_PREVIEW_COUNT} more)</button>`
+    : '';
+
+  return `<div class="bw-slots-expanded">${groupsHTML}</div>${moreBtn}`;
 }
 
 function mbSelectDate(ds) {
@@ -395,6 +441,11 @@ async function mbRefreshSlots(date) {
 
 async function mbSelectSlot(time) {
   const date = mbState.reschedule.date;
+  const bookingRef = mbState.actionTarget.booking_ref;
+
+  const el = document.getElementById('mbSlotsSection');
+  if (el) el.innerHTML = `<div class="bw-no-slots">Rescheduling…</div>`;
+
   const lock = await bwApi('/lock-slot.php', {
     method: 'POST',
     body: { location: mbRescheduleLocationSlug(), date, time, consult_type: mbRescheduleConsultType() },
@@ -407,47 +458,19 @@ async function mbSelectSlot(time) {
     return;
   }
 
-  mbState.reschedule.time = time;
-  mbState.reschedule.reservationToken = lock.reservation_token;
-  mbState.reschedule.reservationExpiresAt = Date.now() + (lock.expires_in * 1000);
-
-  const el = document.getElementById('mbSlotsSection');
-  if (el) el.innerHTML = mbRenderSlotsHTML();
-  mbShowRescheduleConfirmBar();
-}
-
-function mbShowRescheduleConfirmBar() {
-  document.getElementById('mbRescheduleConfirmBar')?.remove();
-  const body = document.getElementById('mbBody');
-  if (!body) return;
-  const bar = document.createElement('div');
-  bar.id = 'mbRescheduleConfirmBar';
-  bar.innerHTML = `<button class="bw-primary-btn bw-confirm-btn" id="mbRescheduleConfirmBtn" onclick="mbConfirmReschedule()">Confirm New Time — ${escapeHTML(mbState.reschedule.time)}</button>`;
-  body.appendChild(bar);
-}
-
-async function mbConfirmReschedule() {
-  const btn = document.getElementById('mbRescheduleConfirmBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Rescheduling…'; }
-
   const res = await bwApi('/reschedule.php', {
     method: 'POST',
-    body: { booking_ref: mbState.actionTarget.booking_ref, reservation_token: mbState.reschedule.reservationToken },
+    body: { booking_ref: bookingRef, reservation_token: lock.reservation_token },
   });
 
   if (!res.success) {
-    if (btn) { btn.disabled = false; btn.textContent = `Confirm New Time — ${mbState.reschedule.time}`; }
     const err = document.getElementById('mbRescheduleError');
     if (err) err.textContent = res.error || 'Could not reschedule. Please try again.';
-    if (res.code === 'reservation_expired' || res.code === 'slot_taken') {
-      mbState.reschedule.time = null;
-      mbState.reschedule.reservationToken = null;
-      document.getElementById('mbRescheduleConfirmBar')?.remove();
-      mbRefreshSlots(mbState.reschedule.date);
-    }
+    mbRefreshSlots(date);
     return;
   }
 
+  mbState.lastAction = 'rescheduled';
   await mbLoadAppointments();
   mbState.actionTarget = null;
   mbState.screen = 'list';
