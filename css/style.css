@@ -2274,9 +2274,14 @@ textarea {
   }
 
   .nav-actions .btn-primary {
+  .nav-actions .btn-outline {
     display: none;
   }
 
+  .nav-actions {
+    gap: 4px;
+  }
+  
   .hamburger {
     display: flex;
   }
