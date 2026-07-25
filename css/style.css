@@ -379,6 +379,11 @@ textarea {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .nav-logo-sub { display: none; } /* frees width on very narrow phones */
 }
 
 .hamburger {

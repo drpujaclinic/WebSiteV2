@@ -20,7 +20,7 @@
 # ── CACHE CONTROL ────────────────────────────────────────────────────────────
 <IfModule mod_expires.c>
   ExpiresActive On
-  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType text/css "access plus 1 minute"
 
   # Cache JavaScript files for 1 month
   ExpiresByType application/javascript "access plus 1 month"

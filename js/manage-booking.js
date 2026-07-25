@@ -393,7 +393,8 @@ function mbSlotPill(time) {
 const MB_SLOTS_PREVIEW_COUNT = 6;
 
 function mbRenderSlotsHTML() {
-  const { morning, evening, slotsExpanded } = mbState.reschedule;
+  const { slotsData, slotsExpanded } = mbState.reschedule;
+  const { morning, evening } = slotsData;
   if (mbState.reschedule.slotsLoading) return `<div class="bw-no-slots">Loading times…</div>`;
   const total = morning.length + evening.length;
   if (total === 0) return `<div class="bw-no-slots">No slots available on this date. Please choose another date.</div>`;
