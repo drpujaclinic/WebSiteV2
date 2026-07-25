@@ -163,19 +163,24 @@ function mbOtpInput(e, idx) {
 }
 
 function startMbOtpTimer() {
-    clearInterval(mbState.otpTimer);
-    mbState.otpSeconds = 30;
-    const resendBtn = document.getElementById('mbResendBtn');
-    if (resendBtn) resendBtn.disabled = true;
-    mbState.otpTimer = setInterval(() => {
-        mbState.otpSeconds--;
-        const valEl = document.getElementById('mbTimerVal');
-        if (valEl) valEl.textContent = `0:${String(mbState.otpSeconds).padStart(2, '0')}`;
-        if (mbState.otpSeconds <= 0) {
-            clearInterval(mbState.otpTimer);
-            if (resendBtn) resendBtn.disabled = false;
-        }
-    }, 1000);
+  clearInterval(mbState.otpTimer);
+  const resendBtn = document.getElementById('mbResendBtn');
+  if (resendBtn) resendBtn.disabled = true;
+  const deadline = Date.now() + 30000;
+
+  function tick() {
+    const secLeft = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    const valEl = document.getElementById('mbTimerVal');
+    if (!valEl) { clearInterval(mbState.otpTimer); return; } // screen changed away — stop silently
+    valEl.textContent = `0:${String(secLeft).padStart(2, '0')}`;
+    if (secLeft <= 0) {
+      clearInterval(mbState.otpTimer);
+      const btn = document.getElementById('mbResendBtn');
+      if (btn) btn.disabled = false;
+    }
+  }
+  tick();
+  mbState.otpTimer = setInterval(tick, 1000);
 }
 
 async function mbResendOtp() {
