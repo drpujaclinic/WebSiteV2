@@ -2195,6 +2195,23 @@ textarea {
 
 /* ── RESPONSIVE ────────────────────────── */
 @media (max-width: 1024px) {
+  .nav-links {
+    display: none;
+  }
+
+  .nav-actions .btn-primary,
+  .nav-actions .btn-outline {
+    display: none;
+  }
+
+  .nav-actions {
+    gap: 4px;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
   .services-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -2272,23 +2289,6 @@ textarea {
     position: static;
     margin: -20px auto 0;
     width: fit-content;
-  }
-
-  .nav-links {
-    display: none;
-  }
-
-  .nav-actions .btn-primary {
-  .nav-actions .btn-outline {
-    display: none;
-  }
-
-  .nav-actions {
-    gap: 4px;
-  }
-  
-  .hamburger {
-    display: flex;
   }
 
   .hero-h1 {
