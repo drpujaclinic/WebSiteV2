@@ -429,7 +429,7 @@ function mbAttachDateScrollListener() {
             );
             const label = document.getElementById('mbDateMonth');
             if (label) label.textContent = MB_MONTHS[Number(leftmost.target.getAttribute('data-month'))];
-        }, { root: strip, rootMargin: '0px -70% 0px 0%', threshold: 0 });
+        }, { root: strip, rootMargin: '0px -40% 0px 0%', threshold: 0 });
     }
 }
 
