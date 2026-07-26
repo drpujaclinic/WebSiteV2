@@ -253,7 +253,7 @@ function renderMbListScreen() {
 
     if (upcoming.length === 0) {
         return `
-      <p style="padding:16px var(--bw-pad);font-size:14px;color:#12282d;margin:0;">Hi ${name} — No upcoming appointments.</p>
+      <p style="padding:16px var(--bw-pad);font-size:14px;color:#12282d;margin:0;">Hi ! ${name} — No upcoming appointments.</p>
       ${past.length ? renderMbPastAccordion(past, card) : ''}
     `;
     }
@@ -382,7 +382,7 @@ function renderMbRescheduleScreen() {
       <button class="bw-back-btn" onclick="mbState.screen='list';renderMbWidget();" aria-label="Go back">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
-      <span class="bw-screen-title" style="font-size:13px;color:#5c7a80;font-weight:500;">Choose a clinic to see its hours</span>
+      <span class="bw-screen-title" style="font-size:13px;color:#5c7a80;font-weight:500;">Choose Clinic/Hospital to see its hours</span>
     </div>
     ${renderMbLocationSwitcher()}
     <div class="bw-date-strip mb-date-strip-pinned" role="group" aria-label="Select a new date">
