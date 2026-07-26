@@ -50,6 +50,10 @@
   position: relative;
 }
 
+.bw-sheet.in {
+  transform: translateY(0); /* mobile: slide up into view. Desktop media query below layers scale+opacity on top. */
+}
+
 .location-tab {
   background: #f1f5f9;
   color: #64748b;
@@ -1284,11 +1288,11 @@
   /* ── MANAGE BOOKING: date strip (independent from .bw-date-* to avoid touching the proven-working main widget) ── */
 .mb-date-scroll {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
-  padding: 4px 24px 10px 20px;
+  padding: 4px var(--bw-pad) 10px;
   scrollbar-width: none;
 }
 .mb-date-scroll::-webkit-scrollbar { display: none; }
@@ -1300,8 +1304,8 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  min-width: 52px;
-  padding: 8px 6px 7px;
+  min-width: 64px;
+  padding: 9px 6px 8px;
   border: 1.5px solid #e3dad0;
   border-radius: 12px;
   background: #ffffff;

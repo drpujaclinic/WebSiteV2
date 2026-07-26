@@ -82,13 +82,13 @@ function renderMbWidget() {
     if (mbState.screen === 'reschedule') {
         mbRefreshSlots(mbState.reschedule.date);
     }
-}
-if (mbState.screen === 'login') {
+    if (mbState.screen === 'login') {
     requestAnimationFrame(() => document.getElementById('mbEmail')?.focus());
-}
-if (mbState.screen === 'otp') {
+    }
+    if (mbState.screen === 'otp') {
     requestAnimationFrame(() => document.getElementById('mbOTPBox0')?.focus());
     startMbOtpTimer();
+    }
 }
 
 function renderMbLoginScreen() {
@@ -419,6 +419,7 @@ function mbRenderSlotsHTML() {
 function mbSelectDate(ds) {
   mbState.reschedule.date = ds;
   mbState.reschedule.time = null;
+  mbState.reschedule.slotsExpanded = false;
   document.getElementById('mbRescheduleConfirmBar')?.remove();
   const strip = document.getElementById('mbDateScroll');
   if (strip) strip.innerHTML = mbBuildDateStrip();
