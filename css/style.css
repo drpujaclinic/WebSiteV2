@@ -425,7 +425,7 @@ textarea {
   left: auto;
   bottom: 0;
   width: 78vw;
-  max-width: 320px;
+  max-width: 300px;
   background: var(--ivory);
   box-shadow: -8px 0 24px rgba(18, 40, 45, 0.18);
   z-index: 999;

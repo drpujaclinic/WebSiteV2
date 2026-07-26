@@ -81,6 +81,7 @@ function renderMbWidget() {
     }
     if (mbState.screen === 'reschedule') {
         mbRefreshSlots(mbState.reschedule.date);
+        mbAttachDateScrollListener();
     }
     if (mbState.screen === 'login') {
         requestAnimationFrame(() => document.getElementById('mbEmail')?.focus());
@@ -362,7 +363,8 @@ function renderMbRescheduleScreen() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
     </div>
-    <div class="bw-date-strip" role="group" aria-label="Select a new date">
+    <div class="bw-date-strip mb-date-strip-pinned" role="group" aria-label="Select a new date">
+      <div class="bw-date-month" id="mbDateMonth" aria-hidden="true">${MB_MONTHS[new Date().getMonth()]}</div>
       <div class="bw-date-scroll" id="mbDateScroll">${mbBuildDateStrip()}</div>
     </div>
     <div class="bw-slots-section" id="mbSlotsSection" aria-live="polite" style="padding-top:4px;">${mbRenderSlotsHTML()}</div>
@@ -370,23 +372,40 @@ function renderMbRescheduleScreen() {
   `;
 }
 
+const MB_MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
 function mbBuildDateStrip() {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const today = new Date();
-    const items = [];
-    items.push(`<div class="bw-date-month" aria-hidden="true">${months[today.getMonth()].toUpperCase()}</div>`);
-    for (let i = 0; i < 10; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
-        const ds = formatDateStr(d);
-        const isSelected = mbState.reschedule.date === ds;
-        const dayLabel = i === 0 ? 'Today' : i === 1 ? 'Tom' : String(d.getDate());
-        items.push(`<button class="bw-date-pill ${isSelected ? 'selected' : ''}" onclick="mbSelectDate('${ds}')"
-      aria-label="${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}" aria-pressed="${isSelected}">
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = new Date();
+  const items = [];
+  for (let i = 0; i < 10; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const ds = formatDateStr(d);
+    const isSelected = mbState.reschedule.date === ds;
+    const dayLabel = i === 0 ? 'Today' : i === 1 ? 'Tom' : String(d.getDate());
+    items.push(`<button class="bw-date-pill ${isSelected ? 'selected' : ''}" data-month="${d.getMonth()}" onclick="mbSelectDate('${ds}')"
+      aria-label="${days[d.getDay()]} ${d.getDate()} ${MB_MONTHS[d.getMonth()]}" aria-pressed="${isSelected}">
       <span class="bw-date-label">${dayLabel}</span><span class="bw-date-day">${days[d.getDay()]}</span></button>`);
-    }
-    return items.join('');
+  }
+  return items.join('');
+}
+
+function mbAttachDateScrollListener() {
+  const strip = document.getElementById('mbDateScroll');
+  if (!strip || strip._mbListenerAttached) return;
+  strip._mbListenerAttached = true;
+  strip.addEventListener('scroll', () => {
+    const pills = strip.querySelectorAll('.bw-date-pill');
+    const stripLeft = strip.getBoundingClientRect().left;
+    let closest = null, closestDist = Infinity;
+    pills.forEach(p => {
+      const dist = Math.abs(p.getBoundingClientRect().left - stripLeft);
+      if (dist < closestDist) { closestDist = dist; closest = p; }
+    });
+    const label = document.getElementById('mbDateMonth');
+    if (closest && label) label.textContent = MB_MONTHS[Number(closest.getAttribute('data-month'))];
+  }, { passive: true });
 }
 
 function mbSlotPill(time) {

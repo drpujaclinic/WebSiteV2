@@ -54,6 +54,17 @@
   transform: translateY(0); /* mobile: slide up into view. Desktop media query below layers scale+opacity on top. */
 }
 
+@media (max-width: 768px) {
+  .bw-sheet {
+    width: calc(100% - 32px);
+    max-width: 420px;
+    margin-bottom: 16px;
+    max-height: 82vh;
+    max-height: 82dvh;
+    border-radius: 20px;
+  }
+}
+
 .location-tab {
   background: #f1f5f9;
   color: #64748b;
@@ -1296,6 +1307,28 @@
 .mb-slots-grid .bw-slot { min-width: 0; padding: 9px 4px; font-size: 12px; min-height: 40px; }
 @media (min-width: 420px) {
   .mb-slots-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ── MANAGE BOOKING: pinned month + exact-5-pill layout ────────────── */
+.bw-date-strip.mb-date-strip-pinned {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 4px var(--bw-pad) 8px;
+}
+.mb-date-strip-pinned .bw-date-month {
+  flex-shrink: 0;
+  margin: 0;
+}
+.mb-date-strip-pinned .bw-date-scroll {
+  flex: 1;
+  min-width: 0; /* required for overflow-x to work inside a flex child */
+  padding: 0;
+  gap: 8px;
+}
+.mb-date-strip-pinned .bw-date-pill {
+  flex: 0 0 calc((100% - 4 * 8px) / 5); /* exactly 5 pill-widths fill the visible track, math-guaranteed regardless of viewport */
+  min-width: 0;
 }
 
 .mb-view-more-btn {
