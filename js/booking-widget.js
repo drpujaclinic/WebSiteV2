@@ -592,10 +592,10 @@ function renderSuccessScreen() {
       <h3 class="bw-success-title">Appointment Confirmed!</h3>
       <p class="bw-success-sub">
         Booking ID: <strong>${escapeHTML(widgetState.bookingRef || '')}</strong>.
-        Your WhatsApp confirmation is opening. Please tap Send to complete.
+        Confirmation sent! Please check your email for full appointment details and a link to manage your booking.
       </p>
       <p class="bw-success-sub" style="margin-top:-8px;">
-        Confirmation sent! Please check your email for full appointment details and a link to manage your booking.
+       Your WhatsApp confirmation is opening. Please tap Send to complete. 
       </p>
 
       <div class="bw-success-details">
