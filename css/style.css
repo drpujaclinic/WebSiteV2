@@ -2246,8 +2246,13 @@ textarea {
   .hero-visual {
     order: 2;
     display: block;
-    height: 300px;
-    margin: 0 auto 24px;
+    height: 220px;
+    margin: 0 auto 16px;
+  }
+
+   .hero-inner {
+    padding: var(--space-6) var(--space-5) var(--space-8);
+    gap: var(--space-6);
   }
 
   .hero-cta-group {
