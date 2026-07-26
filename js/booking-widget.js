@@ -594,6 +594,9 @@ function renderSuccessScreen() {
         Booking ID: <strong>${escapeHTML(widgetState.bookingRef || '')}</strong>.
         Your WhatsApp confirmation is opening. Please tap Send to complete.
       </p>
+      <p class="bw-success-sub" style="margin-top:-8px;">
+        Confirmation sent! Please check your email for full appointment details and a link to manage your booking.
+      </p>
 
       <div class="bw-success-details">
         <div class="bw-sum-row"><span>${escapeHTML(widgetState.name)}</span></div>
@@ -991,13 +994,6 @@ async function bwConfirm() {
       '_blank', 'noopener,noreferrer'
     );
   }, 1000);
-
-  setTimeout(() => {
-    window.open(
-      `https://wa.me/${BOOKING_CONFIG.whatsapp.doctorPhone}?text=${encodeURIComponent(buildDoctorWAMessage())}`,
-      '_blank', 'noopener,noreferrer'
-    );
-  }, 2500);
 }
 
 // ── WHATSAPP MESSAGES ─────────────────────────────────────────────────────────

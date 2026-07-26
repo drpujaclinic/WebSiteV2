@@ -1331,6 +1331,13 @@
   min-width: 0;
 }
 
+.mb-loc-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px var(--bw-pad) 4px;
+}
+
 .mb-view-more-btn {
   display: block;
   width: calc(100% - 40px);

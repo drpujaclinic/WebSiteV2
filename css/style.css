@@ -424,8 +424,7 @@ textarea {
   right: 0;
   left: auto;
   bottom: 0;
-  width: 78vw;
-  max-width: 300px;
+  width: min(70vw, 300px);
   background: var(--ivory);
   box-shadow: -8px 0 24px rgba(18, 40, 45, 0.18);
   z-index: 999;
@@ -475,7 +474,7 @@ textarea {
 /* ── HERO ──────────────────────────────── */
 .hero {
   padding-top: 70px;
-  min-height: 100vh;
+  min-height: auto;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -504,11 +503,11 @@ textarea {
   z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
-  padding: var(--space-20) var(--space-6);
+  padding: var(--space-10) var(--space-6);
   display: grid;
   grid-template-columns: 1fr 480px;
   grid-template-rows: auto auto;
-  gap: var(--space-16);
+  gap: var(--space-10);
   align-items: center;
 }
 

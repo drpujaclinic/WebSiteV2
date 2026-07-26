@@ -332,22 +332,42 @@ async function mbConfirmCancel() {
 
 // ── RESCHEDULE FLOW ──────────────────────────────────────────────────────
 function mbOpenReschedule(ref) {
-    const appt = mbFindAppointment(ref);
-    if (!appt) return;
-    mbState.actionTarget = appt;
-    mbState.reschedule = {
-        date: todayDateStr(), time: null,
-        slotsData: { morning: [], evening: [] }, slotsLoading: false,
-        reservationToken: null, reservationExpiresAt: null,
-    };
-    mbState.screen = 'reschedule';
-    renderMbWidget();
+  const appt = mbFindAppointment(ref);
+  if (!appt) return;
+  mbState.actionTarget = appt;
+  mbState.reschedule = {
+    date: todayDateStr(), time: null,
+    slotsData: { morning: [], evening: [] }, slotsLoading: false, slotsExpanded: false,
+    reservationToken: null, reservationExpiresAt: null,
+    locationSlug: appt.consult_type === 'video' ? 'madhu-vihar' : (appt.location?.slug || 'madhu-vihar'),
+  };
+  mbState.screen = 'reschedule';
+  renderMbWidget();
 }
 
 function mbRescheduleLocationSlug() {
-    const a = mbState.actionTarget;
-    if (!a) return 'madhu-vihar';
-    return a.consult_type === 'video' ? 'madhu-vihar' : (a.location?.slug || 'madhu-vihar');
+  return mbState.reschedule.locationSlug || 'madhu-vihar';
+}
+
+function renderMbLocationSwitcher() {
+  if (mbRescheduleConsultType() !== 'in_person') return '';
+  const current = mbState.reschedule.locationSlug;
+  return `
+    <div class="mb-loc-switcher" role="group" aria-label="Switch clinic location">
+      ${LOCATIONS.map(l => `<button class="bw-loc-pill ${current === l.id ? 'active' : ''}"
+        onclick="mbSwitchLocation('${l.id}')" aria-pressed="${current === l.id}">${l.name.split(',')[0]}</button>`).join('')}
+    </div>
+  `;
+}
+
+function mbSwitchLocation(slug) {
+  if (mbState.reschedule.locationSlug === slug) return;
+  mbState.reschedule.locationSlug = slug;
+  mbState.reschedule.time = null;
+  mbState.reschedule.slotsExpanded = false;
+  const body = document.getElementById('mbBody');
+  if (body) body.innerHTML = renderMbRescheduleScreen();
+  mbAttachDateScrollListener();
 }
 
 function mbRescheduleConsultType() {
@@ -363,6 +383,7 @@ function renderMbRescheduleScreen() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
     </div>
+    ${renderMbLocationSwitcher()}
     <div class="bw-date-strip mb-date-strip-pinned" role="group" aria-label="Select a new date">
       <div class="bw-date-month" id="mbDateMonth" aria-hidden="true">${MB_MONTHS[new Date().getMonth()]}</div>
       <div class="bw-date-scroll" id="mbDateScroll">${mbBuildDateStrip()}</div>
@@ -393,19 +414,27 @@ function mbBuildDateStrip() {
 
 function mbAttachDateScrollListener() {
   const strip = document.getElementById('mbDateScroll');
-  if (!strip || strip._mbListenerAttached) return;
-  strip._mbListenerAttached = true;
-  strip.addEventListener('scroll', () => {
-    const pills = strip.querySelectorAll('.bw-date-pill');
-    const stripLeft = strip.getBoundingClientRect().left;
-    let closest = null, closestDist = Infinity;
-    pills.forEach(p => {
-      const dist = Math.abs(p.getBoundingClientRect().left - stripLeft);
-      if (dist < closestDist) { closestDist = dist; closest = p; }
-    });
-    const label = document.getElementById('mbDateMonth');
-    if (closest && label) label.textContent = MB_MONTHS[Number(closest.getAttribute('data-month'))];
-  }, { passive: true });
+  if (!strip) return;
+  if (!strip._mbObserver) {
+    strip._mbObserver = new IntersectionObserver((entries) => {
+      let best = null, bestRatio = 0;
+      entries.forEach(entry => {
+        if (entry.intersectionRatio > bestRatio) { bestRatio = entry.intersectionRatio; best = entry.target; }
+      });
+      if (best) {
+        const label = document.getElementById('mbDateMonth');
+        if (label) label.textContent = MB_MONTHS[Number(best.getAttribute('data-month'))];
+      }
+    }, { root: strip, threshold: [0.5, 0.99] });
+  }
+  mbObserveDatePills();
+}
+
+function mbObserveDatePills() {
+  const strip = document.getElementById('mbDateScroll');
+  if (!strip || !strip._mbObserver) return;
+  strip._mbObserver.disconnect();
+  strip.querySelectorAll('.bw-date-pill').forEach(p => strip._mbObserver.observe(p));
 }
 
 function mbSlotPill(time) {
@@ -446,6 +475,7 @@ function mbSelectDate(ds) {
     document.getElementById('mbRescheduleConfirmBar')?.remove();
     const strip = document.getElementById('mbDateScroll');
     if (strip) strip.innerHTML = mbBuildDateStrip();
+    mbObserveDatePills();
     requestAnimationFrame(() => {
         const sel = document.querySelector('#mbDateScroll .bw-date-pill.selected');
         if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
