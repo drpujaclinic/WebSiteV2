@@ -421,12 +421,15 @@ textarea {
   display: none;
   position: fixed;
   top: 70px;
-  left: 0;
   right: 0;
+  left: auto;
   bottom: 0;
+  width: 78vw;
+  max-width: 320px;
   background: var(--ivory);
+  box-shadow: -8px 0 24px rgba(18, 40, 45, 0.18);
   z-index: 999;
-  padding: var(--space-6) var(--space-6) var(--space-10);
+  padding: var(--space-6) var(--space-5) var(--space-10);
   overflow-y: auto;
 }
 
