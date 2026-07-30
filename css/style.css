@@ -1219,10 +1219,11 @@ textarea {
 /* ── RECOGNITIONS & CONFERENCES (About page) ──────── */
 .recognition-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 260px));
   gap: var(--space-6);
-  max-width: 1180px;
+  max-width: 620px;
   margin: 0 auto;
+  justify-content: center;
 }
 
 .recognition-card {
@@ -1312,8 +1313,8 @@ textarea {
 /* Location logo box — mirrors the booking widget's .bw-clinic-logo treatment
    so the Locations page and booking widget read as one visual system. */
 .location-card-logo {
-  width: 52px;
-  height: 52px;
+  width: 68px;
+  height: 68px;
   border-radius: var(--r-md);
   background: var(--teal-ghost);
   border: 1px solid var(--teal-pale);
@@ -1333,7 +1334,7 @@ textarea {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 6px;
+  padding: 8px;
 }
 
 .location-card h3 {
@@ -1834,7 +1835,9 @@ textarea {
   z-index: 900;
   width: 56px;
   height: 56px;
-  background: var(--ink);
+  background: rgba(18, 40, 45, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1847,7 +1850,7 @@ textarea {
 
 .chat-fab:hover {
   transform: scale(1.08);
-  background: var(--ink-mid);
+  background: rgba(44, 74, 80, 0.85);
 }
 
 .chat-fab svg {

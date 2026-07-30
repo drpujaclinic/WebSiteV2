@@ -267,6 +267,22 @@ async function bwRefreshSlots(date) {
   widgetState.slotsData = res.success ? res.slots : { morning: [], evening: [] };
   const el = document.getElementById('bwSlotsSection');
   if (el) el.innerHTML = renderSlotsHTML();
+
+  // If this date truly has zero slots, mark its calendar pill red immediately —
+  // the availability-summary badge may have said "open"/"few" before the
+  // slot-level check ran, so this corrects the pill in place rather than
+  // leaving it looking available after the user's already been told otherwise.
+  const hasNoSlots = widgetState.slotsData.morning.length === 0 && widgetState.slotsData.evening.length === 0;
+  if (hasNoSlots) {
+    const strip = document.getElementById('bwDateScroll');
+    const pill = strip && Array.from(strip.querySelectorAll('.bw-date-pill'))
+      .find(p => p.getAttribute('onclick') === `bwSelectDate('${date}')`);
+    const indicator = pill && pill.querySelector('.bw-indicator');
+    if (indicator) {
+      indicator.classList.remove('bw-ind-open', 'bw-ind-few');
+      indicator.classList.add('bw-ind-full');
+    }
+  }
 }
 
 // ── SCREEN RENDERERS ───────────────────────────────────────────────────────────
@@ -313,7 +329,7 @@ function renderBookingScreen() {
   const locPills = LOCATIONS.map(l =>
     `<button class="bw-loc-pill ${widgetState.location?.id === l.id ? 'active' : ''}"
       onclick="bwSelectLocation('${l.id}')"
-      aria-pressed="${widgetState.location?.id === l.id}">${l.name.split(',')[0].split(' ')[0]} ${l.name.split(',')[0].split(' ')[1] || ''}</button>`
+      aria-pressed="${widgetState.location?.id === l.id}">${escapeHTML(l.pillLabel || l.name)}</button>`
   ).join('');
 
   return `

@@ -86,6 +86,7 @@ const LOCATIONS = [
   {
     id: 'madhu-vihar',
     name: "Dr. Puja's Clinic, Madhu Vihar",
+    pillLabel: "Dr. Puja's Clinic",
     address: 'A 128, Gali No 8, Sai Chowk, Madhu Vihar, IP Extension, Patparganj, New Delhi — 110092',
     short: 'A 128, Gali No 8, Madhu Vihar, Delhi',
     logo: 'images/logo.jpg',
@@ -94,6 +95,7 @@ const LOCATIONS = [
   {
     id: 'pushpanjali',
     name: 'Pushpanjali Hospital',
+    pillLabel: 'Pushpanjali',
     address: 'Karkardooma, Delhi',
     short: 'Karkardooma, Delhi',
     logo: 'images/logos/pushpanjali.png',
@@ -102,6 +104,7 @@ const LOCATIONS = [
   {
     id: 'max',
     name: 'Max Super Speciality Hospital',
+    pillLabel: 'Max - PPG',
     address: '108A, Indraprastha Extension, Patparganj',
     short: 'Indraprastha Extension, Patparganj, Delhi',
     logo: 'images/logos/max.png',
@@ -110,6 +113,7 @@ const LOCATIONS = [
   {
     id: 'femmenest',
     name: 'Femmenest',
+    pillLabel: 'Femmenest',
     address: 'Karkardooma, Delhi',
     short: 'Karkardooma, Delhi',
     logo: 'images/logos/femmenest.png',
