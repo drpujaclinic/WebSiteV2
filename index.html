@@ -132,13 +132,14 @@
 </head>
 
 <body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
   <!-- ═══════════════════════════════════ NAV ═══════════════════════════════════ -->
   <nav class="nav" id="mainNav" role="navigation" aria-label="Main navigation">
     <div class="nav-inner">
       <a href="#home" class="nav-logo" onclick="showPage('home');return false;" aria-label="Dr. Puja's Clinic — Home">
         <div class="nav-logo-mark">
-          <img src="images/logo.jpg" alt="" class="nav-logo-img" aria-hidden="true">
+          <img src="images/logo.jpg" alt="" class="nav-logo-img" aria-hidden="true" width="48" height="48">
         </div>
         <div class="nav-logo-text">
           <span class="nav-logo-name">Dr. Puja's Clinic</span>
@@ -147,7 +148,7 @@
       </a>
 
       <ul class="nav-links" role="list">
-        <li><a href="#home" id="nav-home" class="active" onclick="showPage('home');return false;">Home</a></li>
+        <li><a href="#home" id="nav-home" class="active" aria-current="page" onclick="showPage('home');return false;">Home</a></li>
         <li><a href="#about" id="nav-about" onclick="showPage('about');return false;">About</a></li>
         <li><a href="#services" id="nav-services" onclick="showPage('services');return false;">Services</a></li>
         <li><a href="#facilities" id="nav-facilities" onclick="showPage('facilities');return false;">Facilities</a></li>
@@ -291,6 +292,8 @@
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>Practo Prime Verified</div>
+          <div class="trust-item"><img src="images/badges/obgyn-coe.jpg" alt="" aria-hidden="true" width="16" height="16" loading="lazy" decoding="async">OBGYN Centre of
+            Excellence</div>
           <div class="trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               aria-hidden="true">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -543,15 +546,15 @@
             <div class="about-img-stack">
               <div class="about-img-main">
                 <picture>
-                  <source srcset="images/profile1.webp" type="image/webp">
-                  <img src="images/profile1.jpg" alt="Dr. Puja Prasad, Gynaecologist" loading="lazy">
+                  <source srcset="images/profile.webp" type="image/webp">
+                  <img src="images/profile.jpg" alt="Dr. Puja Prasad, Gynaecologist" loading="lazy" decoding="async" width="320" height="430">
                 </picture>
               </div>
               <div class="about-img-secondary">
                 <picture>
                   <source srcset="images/ProfileCert.webp" type="image/webp">
                   <img src="images/ProfileCert.jpg" alt="Dr. Puja Prasad's medical certificates and credentials"
-                    loading="lazy">
+                    loading="lazy" decoding="async" width="220" height="290">
                 </picture>
               </div>
               <div class="about-exp-badge"><span class="num">23+</span><span class="label">Years of Practice</span>
@@ -608,6 +611,37 @@
               <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:32px;">
                 <button class="btn btn-primary" onclick="openBooking()">📅 Book Appointment</button>
                 <a href="tel:+919899416040" class="btn btn-outline">📞 +91-9899416040</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-ivory">
+        <div class="section-pad">
+          <div class="section-header centered">
+            <span class="eyebrow">Recognitions &amp; Conferences</span>
+            <h2 class="section-title" style="font-size:28px;">Engaged With the Wider Medical Community</h2>
+            <p class="section-sub" style="margin-left:auto;margin-right:auto;">Continuing medical education and
+              participation in national OBGYN conferences keep Dr. Puja's practice aligned with current clinical
+              standards.</p>
+          </div>
+          <div class="recognition-grid">
+            <div class="recognition-card">
+              <div class="recognition-photo">
+                <img src="images/recognitions/conference-1.jpg" alt="Dr. Puja Prasad at a national OBGYN conference"
+                  loading="lazy" decoding="async" width="141" height="235">
+              </div>
+              <div class="recognition-caption">Professional Conference Appearance
+                <span>National OBGYN community event</span>
+              </div>
+            </div>
+            <div class="recognition-card">
+              <div class="recognition-photo">
+                <img src="images/recognitions/conference-2.jpg"
+                  alt="Dr. Puja Prasad at the ADOGS 2024 46th Annual Conference" loading="lazy" decoding="async" width="141" height="118">
+              </div>
+              <div class="recognition-caption">ADOGS 2024
+                <span>46th Annual Conference</span>
               </div>
             </div>
           </div>
@@ -887,8 +921,10 @@
             <div class="facility-card">
               <div class="facility-icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="1.8">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  <path d="M9 16c-3-2-5-5-5-8a4 4 0 0 1 7-2.6A4 4 0 0 1 18 8c0 2-1 4-3 5.5" />
+                  <rect x="13" y="13" width="3" height="7" rx="1.5" transform="rotate(35 14.5 16.5)" />
+                  <path d="M18 12c1 .8 1.6 1.8 1.8 3" />
+                  <path d="M20 10c1.6 1.3 2.6 3 3 5" />
                 </svg></div>
               <div>
                 <h3>On-Site Ultrasound Imaging</h3>
@@ -1047,6 +1083,7 @@
 
             <div class="location-card">
               <span class="location-badge-pill pill-secondary">Hospital OPD</span>
+              <div class="location-card-logo"><img src="images/logos/pushpanjali.png" alt="Pushpanjali Medical Centre logo" loading="lazy" decoding="async" width="52" height="52"></div>
               <h3>Pushpanjali Hospital</h3>
               <p class="location-addr">📍 Karkardooma, Delhi</p>
               <table class="timings-table">
@@ -1073,6 +1110,7 @@
 
             <div class="location-card">
               <span class="location-badge-pill pill-secondary">Hospital OPD</span>
+              <div class="location-card-logo"><img src="images/logos/femmenest.png" alt="Femmenest Hospital logo" loading="lazy" decoding="async" width="52" height="52"></div>
               <h3>Femmenest</h3>
               <p class="location-addr">📍 Karkardooma, Delhi</p>
               <table class="timings-table">
@@ -1099,6 +1137,7 @@
 
             <div class="location-card">
               <span class="location-badge-pill pill-secondary">Hospital OPD</span>
+              <div class="location-card-logo"><img src="images/logos/max.png" alt="Max Healthcare logo" loading="lazy" decoding="async" width="52" height="52"></div>
               <h3>Max Super Speciality Hospital</h3>
               <p class="location-addr">📍 108A, Indraprastha Extension, Patparganj</p>
               <table class="timings-table">
@@ -1130,6 +1169,7 @@
             <div class="location-card" style="border-style:dashed;">
               <span class="location-badge-pill" style="background:var(--ivory-mid);color:var(--ink-faint);">Visiting
                 Consultant</span>
+              <div class="location-card-logo"><img src="images/logos/cloudnine.png" alt="Cloudnine Hospital logo" loading="lazy" decoding="async" width="52" height="52"></div>
               <h3>Cloudnine &amp; Yashoda Hospitals</h3>
               <p class="location-addr">📍 Cloudnine, Patparganj · Yashoda, Kaushambi</p>
               <p style="font-size:13px;color:var(--ink-light);margin-top:8px;">Available for admitted patients and
@@ -1459,6 +1499,7 @@
                     <label class="form-label" for="cName">Full Name *</label>
                     <input class="form-input" type="text" id="cName" name="name" placeholder="Your name" required
                       autocomplete="name">
+                    <div class="form-error-text" id="cNameError" role="alert" aria-live="polite"></div>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="cPhone">Phone Number</label>
@@ -1487,6 +1528,7 @@
                   <label class="form-label" for="cMessage">Message *</label>
                   <textarea class="form-textarea" id="cMessage" name="message" placeholder="How can we help you?"
                     required></textarea>
+                  <div class="form-error-text" id="cMessageError" role="alert" aria-live="polite"></div>
                 </div>
                 <div class="consent-row">
                   <input type="checkbox" id="contactConsent" name="consent">
@@ -1495,6 +1537,7 @@
                       onclick="showPage('privacy');return false;" style="color:var(--teal);">Privacy
                       Policy</a>.</label>
                 </div>
+                <div class="form-error-text" id="contactConsentError" role="alert" aria-live="polite" style="padding-left:28px;"></div>
                 <button type="submit" class="btn btn-primary"
                   style="width:100%;justify-content:center;margin-top:20px;">Send Message</button>
               </form>
@@ -1525,7 +1568,7 @@
         </div>
       </div>
       <div class="bg-white">
-        <div class="section-pad" style="max-width:800px;">
+        <div class="section-pad container-narrow">
           <p>Dr. Puja's Clinic ("we", "our", or "Clinic") is committed to protecting the privacy and security of
             your
             personal data. This Privacy Policy outlines our practices in strict compliance with the <strong>Digital
@@ -1582,7 +1625,7 @@
         </div>
       </div>
       <div class="bg-white">
-        <div class="section-pad" style="max-width:800px;">
+        <div class="section-pad container-narrow">
           <p>The information, content, text, graphics, and resources available on this website are provided strictly
             for
             general educational and informational purposes only.</p>
@@ -1617,7 +1660,7 @@
         </div>
       </div>
       <div class="bg-white">
-        <div class="section-pad" style="max-width:800px;">
+        <div class="section-pad container-narrow">
           <h3>1. Booking Requests</h3>
           <p>Submitting an online booking through this website is an appointment <em>request</em>. Slots are
             finalised

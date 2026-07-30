@@ -131,17 +131,44 @@ function formatDateStr(d) {
 // ── CONTACT FORM (Formspree + WhatsApp fallback) — unchanged, not part of booking ──
 async function submitContactForm(e) {
   e.preventDefault();
+
+  const nameEl = document.getElementById('cName');
+  const messageEl = document.getElementById('cMessage');
   const consent = document.getElementById('contactConsent');
+  const nameErr = document.getElementById('cNameError');
+  const messageErr = document.getElementById('cMessageError');
+  const consentErr = document.getElementById('contactConsentError');
+
+  // Reset any error state from a previous submit attempt
+  [nameEl, messageEl].forEach(el => el && el.classList.remove('error'));
+  [nameErr, messageErr, consentErr].forEach(el => { if (el) el.textContent = ''; });
+
+  const name = nameEl.value.trim();
+  const message = messageEl.value.trim();
+  let firstInvalid = null;
+
+  if (!name) {
+    nameEl.classList.add('error');
+    if (nameErr) nameErr.textContent = 'Please enter your name.';
+    firstInvalid = firstInvalid || nameEl;
+  }
+  if (!message) {
+    messageEl.classList.add('error');
+    if (messageErr) messageErr.textContent = 'Please enter a message.';
+    firstInvalid = firstInvalid || messageEl;
+  }
   if (!consent.checked) {
-    alert('Please accept the consent checkbox before submitting.');
+    if (consentErr) consentErr.textContent = 'Please accept the consent checkbox before submitting.';
+    firstInvalid = firstInvalid || consent;
+  }
+  if (firstInvalid) {
+    firstInvalid.focus();
     return;
   }
 
-  const name = document.getElementById('cName').value.trim();
   const email = document.getElementById('cEmail').value.trim();
   const phone = document.getElementById('cPhone').value.trim();
   const subject = document.getElementById('cSubject').value;
-  const message = document.getElementById('cMessage').value.trim();
   const submitBtn = e.target.querySelector('button[type="submit"]');
 
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }

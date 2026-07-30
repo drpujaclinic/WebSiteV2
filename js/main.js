@@ -27,9 +27,15 @@ function showPage(name) {
     if (titles[name]) document.title = titles[name];
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.remove('active');
+    a.removeAttribute('aria-current');
+  });
   const navEl = document.getElementById('nav-' + name);
-  if (navEl) navEl.classList.add('active');
+  if (navEl) {
+    navEl.classList.add('active');
+    navEl.setAttribute('aria-current', 'page');
+  }
   // Close mobile menu if open
   closeMobileMenu();
   // Push to browser history for deep-linking
