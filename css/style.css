@@ -1219,9 +1219,9 @@ textarea {
 /* ── RECOGNITIONS & CONFERENCES (About page) ──────── */
 .recognition-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 260px));
-  gap: var(--space-6);
-  max-width: 620px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 220px));
+  gap: var(--space-5);
+  max-width: 980px;
   margin: 0 auto;
   justify-content: center;
 }
@@ -1570,7 +1570,7 @@ textarea {
 .page-hero {
   padding-top: 70px;
   background: linear-gradient(160deg, var(--ink) 0%, var(--ink-mid) 100%);
-  padding-bottom: 60px;
+  padding-bottom: 40px;
   position: relative;
   overflow: hidden;
 }
@@ -1588,7 +1588,7 @@ textarea {
 .page-hero-inner {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 60px var(--space-6) 0;
+  padding: 40px var(--space-6) 0;
   position: relative;
 }
 
@@ -2191,6 +2191,25 @@ textarea {
   margin-bottom: var(--space-5);
 }
 
+.service-hub-card.upcoming {
+  opacity: 0.7;
+  background: var(--ivory-mid);
+}
+
+.service-hub-upcoming-badge {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: var(--ivory-dark);
+  padding: 3px 10px;
+  border-radius: var(--r-full);
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
 .service-hub-card .tags-row {
   margin-bottom: var(--space-5);
 }
@@ -2360,6 +2379,25 @@ textarea {
   font-size: var(--text-lg);
   font-weight: 500;
   margin-bottom: var(--space-2);
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+
+  .nav-actions .btn-primary,
+  .nav-actions .btn-outline {
+    display: none;
+  }
+
+  .nav-actions {
+    gap: 4px;
+  }
+
+  .hamburger {
+    display: flex;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2591,21 +2629,25 @@ textarea {
 
 /* ── RESPONSIVE ────────────────────────── */
 @media (max-width: 1024px) {
+  /* Compact (not hide) the nav so it still fits down to 768px —
+     the collapse-to-hamburger threshold moved to 768px below. */
   .nav-links {
-    display: none;
+    gap: 0;
+  }
+
+  .nav-links a {
+    padding: 7px 9px;
+    font-size: 13px;
   }
 
   .nav-actions .btn-primary,
   .nav-actions .btn-outline {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .nav-logo-sub {
     display: none;
-  }
-
-  .nav-actions {
-    gap: 4px;
-  }
-
-  .hamburger {
-    display: flex;
   }
 
   .services-grid {

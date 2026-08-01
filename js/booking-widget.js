@@ -611,7 +611,7 @@ function renderSuccessScreen() {
         Confirmation sent! Please check your email for full appointment details and a link to manage your booking.
       </p>
       <p class="bw-success-sub" style="margin-top:-8px;">
-       Your WhatsApp confirmation is opening. Please tap Send to complete. 
+       Tap the button below to send your confirmation via WhatsApp.
       </p>
 
       <div class="bw-success-details">
@@ -1003,13 +1003,6 @@ async function bwConfirm() {
 
   widgetState.screen = 'success';
   renderWidget();
-
-  setTimeout(() => {
-    window.open(
-      `https://wa.me/${BOOKING_CONFIG.whatsapp.patientPhone}?text=${encodeURIComponent(buildSuccessWAMessage())}`,
-      '_blank', 'noopener,noreferrer'
-    );
-  }, 1000);
 }
 
 // ── WHATSAPP MESSAGES ─────────────────────────────────────────────────────────
