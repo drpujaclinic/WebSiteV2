@@ -91,6 +91,22 @@ document.addEventListener('click', function (e) {
   }
 });
 
+// Escape key closes the mobile menu or chat panel, whichever is open
+// (WCAG 2.2 AA — keyboard users need a way to dismiss overlays without a mouse)
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  const menu = document.getElementById('mobileMenu');
+  if (menu && menu.classList.contains('open')) {
+    closeMobileMenu();
+    return;
+  }
+  const chat = document.getElementById('chatPanel');
+  if (chat && chat.classList.contains('open')) {
+    closeChat();
+  }
+});
+
+
 // ── STICKY NAV ───────────────────────────────────────────────────────────────
 window.addEventListener('scroll', function () {
   const nav = document.getElementById('mainNav');
