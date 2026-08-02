@@ -1352,7 +1352,7 @@ textarea {
 
 .location-card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;   /* keeps logo pinned to top if address wraps to 2 lines */
   gap: var(--space-4);
   margin-bottom: var(--space-2);
 }
@@ -1360,8 +1360,19 @@ textarea {
   margin-bottom: 0;
   flex-shrink: 0;
 }
-.location-card-header h3 {
-  margin-bottom: 0;
+.location-card-header-text {
+  min-width: 0;   /* lets long addresses wrap instead of overflowing the flex row */
+}
+.location-card-header-text h3 {
+  margin-bottom: 2px;
+}
+.location-card-header-text .location-addr {
+  margin-bottom: 0;   /* spacing now comes from .location-card-header's margin-bottom instead */
+}
+
+/* Logo framing consistency */
+.location-card-logo img {
+  padding: 6px;   /* was 8px — slightly less inset so all logos read closer in visual weight */
 }
 
 .location-card h3 {
