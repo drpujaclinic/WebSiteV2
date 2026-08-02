@@ -360,14 +360,17 @@ function renderMbLocationSwitcher() {
   `;
 }
 
+// AFTER
 function mbSwitchLocation(slug) {
     if (mbState.reschedule.locationSlug === slug) return;
     mbState.reschedule.locationSlug = slug;
     mbState.reschedule.time = null;
     mbState.reschedule.slotsExpanded = false;
+    mbState.reschedule.slotsData = { morning: [], evening: [] }; // clear stale slots from the previous location
     const body = document.getElementById('mbBody');
     if (body) body.innerHTML = renderMbRescheduleScreen();
     mbAttachDateScrollListener();
+    mbRefreshSlots(mbState.reschedule.date); // refetch slots for the newly selected location
 }
 
 function mbRescheduleConsultType() {

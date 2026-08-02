@@ -1351,6 +1351,19 @@ textarea {
   margin-bottom: var(--space-2);
 }
 
+.location-card-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+@media (max-width: 768px) {
+  .location-card-columns {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 .location-addr {
   font-size: var(--text-sm);
   color: var(--ink-light);
@@ -2885,4 +2898,49 @@ textarea {
   .assoc-locations-grid {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 768px) {
+  .chat-fab, .whatsapp-float { width: 48px; height: 48px; }
+  .footer { padding-bottom: 88px; }            /* clears both FABs at page end */
+  .location-earliest-slot { margin-bottom: 64px; } /* clears FABs on Locations page */
+}
+
+@media (max-width: 768px) {
+  .chat-fab { background: rgba(18, 40, 45, 0.92); } /* opaque fallback when blur unsupported */
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  @media (max-width: 768px) {
+    .chat-fab {
+      background: rgba(18, 40, 45, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .footer-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+  }
+  .footer-links li { margin-bottom: 0; }
+  .footer-links a {
+    padding: 12px 3px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-menu a {
+    padding: 12px 12px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .mobile-menu nav { gap: 0; }
+  .mobile-menu-divider { margin: 12px 0; }
 }
