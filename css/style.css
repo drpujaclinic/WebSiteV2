@@ -419,7 +419,11 @@ textarea {
 }
 
 @media (max-width: 480px) {
-  .nav-logo-sub { display: none; } /* frees width on very narrow phones */
+  .nav-logo-sub {
+    display: none;
+  }
+
+  /* frees width on very narrow phones */
 }
 
 .hamburger {
@@ -2664,6 +2668,7 @@ textarea {
 
 /* ── RESPONSIVE ────────────────────────── */
 @media (max-width: 1024px) {
+
   /* Compact (not hide) the nav so it still fits down to 768px —
      the collapse-to-hamburger threshold moved to 768px below. */
   .nav-links {
@@ -2738,7 +2743,7 @@ textarea {
     margin: 0 auto 16px;
   }
 
-   .hero-inner {
+  .hero-inner {
     padding: var(--space-6) var(--space-5) var(--space-8);
     gap: var(--space-6);
   }
@@ -2901,18 +2906,39 @@ textarea {
 }
 
 @media (max-width: 768px) {
-  .chat-fab, .whatsapp-float { width: 48px; height: 48px; }
-  .footer { padding-bottom: 88px; }            /* clears both FABs at page end */
-  .location-earliest-slot { margin-bottom: 64px; } /* clears FABs on Locations page */
+
+  .chat-fab,
+  .whatsapp-float {
+    width: 48px;
+    height: 48px;
+  }
+
+  .footer {
+    padding-bottom: 88px;
+  }
+
+  /* clears both FABs at page end */
+  .location-earliest-slot {
+    margin-bottom: 10px;
+  }
+  #page-locations {
+    padding-bottom: 64px;     /* FAB clearance moved here, applies once at page end */
+  }
 }
+  /* clears FABs on Locations page */
 
 @media (max-width: 768px) {
-  .chat-fab { background: rgba(18, 40, 45, 0.92); } /* opaque fallback when blur unsupported */
+  .chat-fab {
+    background: rgba(18, 40, 45, 0.8);
+  }
+
+  /* opaque fallback when blur unsupported */
 }
+
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
   @media (max-width: 768px) {
     .chat-fab {
-      background: rgba(18, 40, 45, 0.6);
+      background: rgba(18, 40, 45, 0..42);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
@@ -2923,12 +2949,16 @@ textarea {
   .footer-links {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px 16px;
+    gap: 2px 16px;
   }
-  .footer-links li { margin-bottom: 0; }
+
+  .footer-links li {
+    margin-bottom: 0;
+  }
+
   .footer-links a {
-    padding: 12px 3px;
-    min-height: 44px;
+    padding: 8px 3px;
+    min-height: 40px;
     display: flex;
     align-items: center;
   }
@@ -2941,6 +2971,12 @@ textarea {
     display: flex;
     align-items: center;
   }
-  .mobile-menu nav { gap: 0; }
-  .mobile-menu-divider { margin: 12px 0; }
+
+  .mobile-menu nav {
+    gap: 0;
+  }
+
+  .mobile-menu-divider {
+    margin: 12px 0;
+  }
 }
