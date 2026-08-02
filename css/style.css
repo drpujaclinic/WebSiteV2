@@ -1350,6 +1350,20 @@ textarea {
   padding: 8px;
 }
 
+.location-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+.location-card-header .location-card-logo {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.location-card-header h3 {
+  margin-bottom: 0;
+}
+
 .location-card h3 {
   font-size: var(--text-xl);
   margin-bottom: var(--space-2);
@@ -1360,6 +1374,15 @@ textarea {
   grid-template-columns: 1fr 1fr;
   gap: 32px;
 }
+
+.location-card-logo-group {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.location-card-logo-group .location-card-logo {
+  margin-bottom: 0;
+}git 
 
 @media (max-width: 768px) {
   .location-card-columns {
