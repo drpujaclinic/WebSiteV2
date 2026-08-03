@@ -1,0 +1,19 @@
+# ── BLOG API REST-STYLE ROUTING ─────────────────────────────────────────────
+# New file — public_html/api/ had no .htaccess before this. Scoped ONLY to
+# the 3 read-only blog endpoints; every other /api/*.php URL (check-slots.php,
+# cancel.php, staff/*, etc.) is untouched and keeps working exactly as-is,
+# since RewriteRule only matches paths starting with "blog/".
+#
+# Maps:
+#   GET /api/blog/articles          -> /api/blog-articles.php
+#   GET /api/blog/articles/{slug}   -> /api/blog-article.php?slug={slug}
+#   GET /api/blog/categories        -> /api/blog-categories.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /api/
+
+  RewriteRule ^blog/articles/?$ blog-articles.php [L,QSA]
+  RewriteRule ^blog/articles/([a-z0-9-]+)/?$ blog-article.php?slug=$1 [L,QSA]
+  RewriteRule ^blog/categories/?$ blog-categories.php [L,QSA]
+</IfModule>
