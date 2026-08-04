@@ -1432,97 +1432,22 @@
             <span class="eyebrow">Featured</span>
             <h2 class="section-title" style="font-size:28px;">Start Here</h2>
           </div>
-          <article class="featured-article">
-            <div class="featured-article-thumb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="1.8">
-                <path
-                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg></div>
-            <div class="featured-article-body">
-              <div class="blog-tag">Pregnancy</div>
-              <h3>7 Warning Signs in Pregnancy You Should Never Ignore</h3>
-              <p>Understanding which symptoms need immediate medical attention — and which are normal pregnancy
-                discomforts — can make all the difference for a healthy outcome.</p>
-              <div class="blog-meta">Dr. Puja Prasad · 5 min read</div>
-            </div>
+          <article class="featured-article" id="blogFeaturedContainer">
+            <!-- Populated by js/blog.js (blogLoadFeatured). Hides itself automatically
+       if no article is marked featured yet. -->
           </article>
 
           <div class="section-header" style="margin-top:64px;">
             <span class="eyebrow">Latest Articles</span>
             <h2 class="section-title" style="font-size:28px;">More From the Blog</h2>
           </div>
-          <div class="blog-grid">
-            <article class="blog-card">
-              <div class="blog-thumb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="1.8">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg></div>
-              <div class="blog-body">
-                <div class="blog-tag">PCOD</div>
-                <h3>PCOD vs PCOS: What's the Difference and Why It Matters</h3>
-                <p>Many women are told they have one when they might have the other. Here's a clear, accessible
-                  explanation of both conditions and how they're treated differently.</p>
-                <div class="blog-meta">Dr. Puja Prasad · 6 min read</div>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-thumb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="1.8">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg></div>
-              <div class="blog-body">
-                <div class="blog-tag">Fertility</div>
-                <h3>When Should You See a Fertility Specialist? A Practical Guide</h3>
-                <p>How long should you try before consulting a specialist? The answer depends on age and individual
-                  circumstances — this guide explains what to expect.</p>
-                <div class="blog-meta">Dr. Puja Prasad · 4 min read</div>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-thumb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="1.8">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg></div>
-              <div class="blog-body">
-                <div class="blog-tag">Surgery</div>
-                <h3>Laparoscopic Surgery: What to Expect Before, During and After</h3>
-                <p>A thorough walkthrough of the laparoscopic procedure — from how to prepare, what happens during
-                  surgery, and how to recover comfortably at home.</p>
-                <div class="blog-meta">Dr. Puja Prasad · 7 min read</div>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-thumb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="1.8">
-                  <circle cx="12" cy="8" r="6" />
-                  <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-                </svg></div>
-              <div class="blog-body">
-                <div class="blog-tag">Women's Health</div>
-                <h3>The Complete Guide to Cervical Cancer Prevention in India</h3>
-                <p>Who needs a Pap smear, when to get the HPV vaccine, and what the screening schedule should look
-                  like
-                  — explained for Indian women.</p>
-                <div class="blog-meta">Dr. Puja Prasad · 6 min read</div>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-thumb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="1.8">
-                  <path
-                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg></div>
-              <div class="blog-body">
-                <div class="blog-tag">Menopause</div>
-                <h3>Navigating Menopause: Symptoms, HRT, and What to Expect</h3>
-                <p>The menopause transition affects every woman differently. Dr. Puja breaks down the symptoms,
-                  treatment options, and how to maintain quality of life through the transition.</p>
-                <div class="blog-meta">Dr. Puja Prasad · 5 min read</div>
-              </div>
-            </article>
+          <div id="blogActiveFilter"></div>
+          <div class="blog-grid" id="blogArticlesGrid">
+            <p class="blog-loading">Loading articles…</p>
+          </div>
+          <div style="text-align:center;margin-top:24px;">
+            <button id="blogLoadMoreBtn" class="btn btn-outline" onclick="blogLoadMore()" style="display:none;">Load
+              More Articles</button>
           </div>
 
           <div class="section-header" style="margin-top:64px;">
@@ -1548,6 +1473,9 @@
                     Care</span>
                 </div>
               </details>
+              <button class="blog-category-filter-btn"
+                onclick="blogFilterByCategory('obstetrics-pregnancy-care', 'Obstetrics: Pregnancy Care')">View Articles
+                in This Category →</button>
               <div class="service-hub-reading" style="margin-top:12px;margin-bottom:0;"><a href="#services"
                   onclick="showPage('services');return false;">Related services →</a></div>
             </div>
@@ -1567,6 +1495,9 @@
                     Insemination (IUI)</span><span class="tag">IVF Counselling &amp; Referral</span>
                 </div>
               </details>
+              <button class="blog-category-filter-btn"
+                onclick="blogFilterByCategory('obstetrics-pregnancy-care', 'Obstetrics: Pregnancy Care')">View Articles
+                in This Category →</button>
               <div class="service-hub-reading" style="margin-top:12px;margin-bottom:0;"><a href="#services"
                   onclick="showPage('services');return false;">Related services →</a></div>
             </div>
@@ -1586,6 +1517,9 @@
                     class="tag">Endometrial Protection</span><span class="tag">Hirsutism and Acne Management</span>
                 </div>
               </details>
+              <button class="blog-category-filter-btn"
+                onclick="blogFilterByCategory('obstetrics-pregnancy-care', 'Obstetrics: Pregnancy Care')">View Articles
+                in This Category →</button>
               <div class="service-hub-reading" style="margin-top:12px;margin-bottom:0;"><a href="#services"
                   onclick="showPage('services');return false;">Related services →</a></div>
             </div>
@@ -1601,8 +1535,11 @@
                     Consultation</span>
                 </div>
               </details>
-              <div class="service-hub-reading" style="margin-top:12px;margin-bottom:0;"><span
-                  class="service-hub-soon">Educational content coming soon.</span></div>
+              <button class="blog-category-filter-btn"
+                onclick="blogFilterByCategory('obstetrics-pregnancy-care', 'Obstetrics: Pregnancy Care')">View Articles
+                in This Category →</button>
+              <div class="service-hub-reading" style="margin-top:12px;margin-bottom:0;"><a href="#services"
+                  onclick="showPage('services');return false;">Related services →</a></div>
             </div>
 
             <div class="blog-category-card">
@@ -1624,6 +1561,9 @@
                     &amp; HRT</span>
                 </div>
               </details>
+              <button class="blog-category-filter-btn"
+                onclick="blogFilterByCategory('obstetrics-pregnancy-care', 'Obstetrics: Pregnancy Care')">View Articles
+                in This Category →</button>
               <div class="service-hub-reading" style="margin-top:12px;margin-bottom:0;"><a href="#services"
                   onclick="showPage('services');return false;">Related services →</a></div>
             </div>
@@ -1648,6 +1588,9 @@
                     class="tag">Ovarian Tumour Surgery</span><span class="tag">Open Gynaecological Surgery</span>
                 </div>
               </details>
+              <button class="blog-category-filter-btn"
+                onclick="blogFilterByCategory('obstetrics-pregnancy-care', 'Obstetrics: Pregnancy Care')">View Articles
+                in This Category →</button>
               <div class="service-hub-reading" style="margin-top:12px;margin-bottom:0;"><a href="#services"
                   onclick="showPage('services');return false;">Related services →</a></div>
             </div>
@@ -1669,6 +1612,9 @@
                     Assessment</span><span class="tag">Ultrasound-guided Procedures</span>
                 </div>
               </details>
+              <button class="blog-category-filter-btn"
+                onclick="blogFilterByCategory('obstetrics-pregnancy-care', 'Obstetrics: Pregnancy Care')">View Articles
+                in This Category →</button>
               <div class="service-hub-reading" style="margin-top:12px;margin-bottom:0;"><a href="#services"
                   onclick="showPage('services');return false;">Related services →</a></div>
             </div>
@@ -1692,6 +1638,34 @@
       </div>
       <div class="cta-band">
         <h2>Have a Question This Didn't Answer?</h2>
+        <p>Book a consultation with Dr. Puja, or ask our AI assistant for a quick pointer.</p>
+        <div class="cta-band-actions">
+          <button class="btn btn-primary btn-lg" onclick="openBooking()">📅 Book Appointment</button>
+          <button class="btn btn-ghost-white btn-lg" onclick="openChat()">💬 Ask the Assistant</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ BLOG ARTICLE DETAIL PAGE ══════════════════ -->
+    <section id="page-blog-article" class="page page-section">
+      <div class="page-hero">
+        <div class="page-hero-inner">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="#home" onclick="showPage('home');return false;">Home</a> <span aria-hidden="true">/</span>
+            <a href="#blog" onclick="showPage('blog');return false;">Blog</a> <span aria-hidden="true">/</span>
+            <span id="blogArticleBreadcrumbTitle">Article</span>
+          </nav>
+          <h1 id="blogArticleHeroTitle"><em>Loading…</em></h1>
+          <p id="blogArticleHeroMeta"></p>
+        </div>
+      </div>
+      <div class="bg-white">
+        <div class="section-pad container-narrow" id="blogArticleBody">
+          <p class="blog-loading">Loading article…</p>
+        </div>
+      </div>
+      <div class="cta-band">
+        <h2>Have a Question About This?</h2>
         <p>Book a consultation with Dr. Puja, or ask our AI assistant for a quick pointer.</p>
         <div class="cta-band-actions">
           <button class="btn btn-primary btn-lg" onclick="openBooking()">📅 Book Appointment</button>
@@ -2134,6 +2108,7 @@
   <!-- chat.js — AI assistant -->
   <script src="js/chat.js" defer></script>
   <!-- main.js: showPage, nav, scroll, hash routing — loaded last -->
+  <script src="js/blog.js" defer></script>
   <script src="js/main.js" defer></script>
 
 </body>

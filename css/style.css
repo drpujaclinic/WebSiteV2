@@ -1593,6 +1593,62 @@ textarea {
 }
 .blog-load-error { color: var(--error); }
 
+.blog-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--teal-ghost);
+  color: var(--teal);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--r-full);
+  margin-bottom: var(--space-5);
+}
+.blog-filter-badge button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0;
+  font-size: inherit;
+}
+
+.blog-category-filter-btn {
+  display: inline-block;
+  margin-top: var(--space-2);
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--teal);
+  cursor: pointer;
+}
+.blog-category-filter-btn:hover { text-decoration: underline; }
+
+.blog-article-content p { margin-bottom: var(--space-4); line-height: 1.75; color: var(--ink-mid); }
+.blog-article-content h2 { font-size: var(--text-xl); margin: var(--space-8) 0 var(--space-3); }
+
+.blog-faq-item {
+  border: 1px solid var(--ivory-dark);
+  border-radius: var(--r-md);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-3);
+}
+.blog-faq-item summary { cursor: pointer; font-weight: 600; color: var(--ink); list-style: none; }
+.blog-faq-item summary::-webkit-details-marker { display: none; }
+.blog-faq-item div { margin-top: var(--space-3); }
+
+.blog-related-list { list-style: none; }
+.blog-related-list li { margin-bottom: var(--space-2); }
+.blog-related-list a { color: var(--teal); font-weight: 600; text-decoration: none; }
+.blog-related-list a:hover { text-decoration: underline; }
+
+.blog-pillar-backlink { font-size: var(--text-sm); color: var(--ink-light); margin-top: var(--space-8); }
+.blog-pillar-backlink a { color: var(--teal); font-weight: 600; text-decoration: none; }
+
 /* ── CTA BAND ──────────────────────────── */
 .cta-band {
   background: var(--ink);
@@ -2981,7 +3037,7 @@ textarea {
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
   @media (max-width: 768px) {
     .chat-fab {
-      background: rgba(18, 40, 45, 0..42);
+      background: rgba(18, 40, 45, 0.42);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }

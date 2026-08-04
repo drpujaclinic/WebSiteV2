@@ -26,6 +26,7 @@ function showPage(name) {
     };
     if (titles[name]) document.title = titles[name];
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (name === 'blog' && typeof blogInit === 'function') blogInit();
   }
   document.querySelectorAll('.nav-links a').forEach(a => {
     a.classList.remove('active');
@@ -44,9 +45,41 @@ function showPage(name) {
   }
 }
 
+// ADD after the existing showPage() function:
+
+function showBlogArticle(slug, pushHistory = true) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-blog-article');
+  if (!target) return;
+  target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.remove('active');
+    a.removeAttribute('aria-current');
+  });
+  document.getElementById('nav-blog')?.classList.add('active'); // article is conceptually under Blog
+
+  closeMobileMenu();
+
+  if (pushHistory && history.pushState) {
+    history.pushState({ page: 'blog-article', slug }, '', '#blog/' + encodeURIComponent(slug));
+  }
+
+  if (typeof blogLoadArticleDetail === 'function') blogLoadArticleDetail(slug);
+}
+
 // Restore page from URL hash on load (enables direct links & browser back/forward)
+// REPLACE restorePageFromHash() entirely with:
+
 function restorePageFromHash() {
   const hash = location.hash.replace('#', '').trim();
+
+  if (hash.startsWith('blog/')) {
+    const slug = decodeURIComponent(hash.slice(5));
+    if (slug) { showBlogArticle(slug, false); return; }
+  }
+
   const validPages = ['home', 'about', 'services', 'facilities', 'locations', 'blog',
     'contact', 'testimonials', 'privacy', 'disclaimer', 'terms'];
   if (hash && validPages.includes(hash)) {
@@ -54,7 +87,13 @@ function restorePageFromHash() {
   }
 }
 
+// REPLACE the popstate listener entirely with:
+
 window.addEventListener('popstate', function (e) {
+  if (e.state && e.state.page === 'blog-article' && e.state.slug) {
+    showBlogArticle(e.state.slug, false);
+    return;
+  }
   if (e.state && e.state.page) {
     showPage(e.state.page);
   }
