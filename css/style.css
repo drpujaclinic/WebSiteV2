@@ -1584,6 +1584,15 @@ textarea {
   color: var(--ink-light);
 }
 
+.blog-loading, .blog-load-error, .blog-no-articles {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--ink-light);
+  font-size: var(--text-sm);
+  padding: 24px 0;
+}
+.blog-load-error { color: var(--error); }
+
 /* ── CTA BAND ──────────────────────────── */
 .cta-band {
   background: var(--ink);
