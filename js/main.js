@@ -23,6 +23,7 @@ function showPage(name) {
       testimonials: "Patient Stories | Dr. Puja's Clinic",
       blog: "Women's Health Blog | Dr. Puja Prasad",
       contact: "Contact Us | Dr. Puja's Clinic, Patparganj",
+      "fertility-community": "Fertility Education Community | Dr. Puja's Clinic",
     };
     if (titles[name]) document.title = titles[name];
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -81,7 +82,7 @@ function restorePageFromHash() {
   }
 
   const validPages = ['home', 'about', 'services', 'facilities', 'locations', 'blog',
-    'contact', 'testimonials', 'privacy', 'disclaimer', 'terms'];
+    'contact', 'testimonials', 'privacy', 'disclaimer', 'terms', 'fertility-community'];
   if (hash && validPages.includes(hash)) {
     showPage(hash);
   }

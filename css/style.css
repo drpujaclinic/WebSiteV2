@@ -3079,3 +3079,90 @@ textarea {
     margin: 12px 0;
   }
 }
+/* ═══════════════════════════════════════════════════════════
+   FERTILITY EDUCATION COMMUNITY — new page-specific styles
+   All values pull from existing design tokens (var(--ink), var(--gold),
+   var(--ivory), var(--teal), --space-*, --r-*, --shadow-*, --font-*).
+   No new colors, fonts, or spacing scale introduced.
+═══════════════════════════════════════════════════════════ */
+
+/* ── HERO ──────────────────────────────────────────────── */
+.fc-hero {
+  padding: 130px var(--space-6) 80px;
+  background: linear-gradient(160deg, var(--ivory) 0%, var(--teal-ghost) 60%, var(--ivory) 100%);
+  text-align: center;
+}
+.fc-hero-inner { max-width: 680px; margin: 0 auto; }
+.fc-hero-title {
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--ink);
+  margin: var(--space-4) 0 var(--space-5);
+  letter-spacing: -0.01em;
+}
+.fc-hero-title em { font-style: italic; font-weight: 400; color: var(--teal); }
+.fc-hero-sub { font-size: var(--text-md); color: var(--ink-light); line-height: 1.7; margin-bottom: var(--space-8); }
+.fc-trust-line { font-size: var(--text-sm); color: var(--ink-light); margin-top: var(--space-4); }
+
+/* ── GOLD CTA BUTTON (modifier on existing .btn) ─────────── */
+.fc-btn-gold { background: var(--gold); color: var(--ink); box-shadow: 0 4px 16px rgba(184, 146, 42, 0.3); }
+.fc-btn-gold:hover { background: #a17f22; color: white; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(184, 146, 42, 0.4); }
+
+/* ── PROMISE BAND (content styling on top of existing .cta-band) ── */
+.fc-promise-band { text-align: center; }
+.fc-quote {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 32px);
+  font-style: italic;
+  color: white;
+  line-height: 1.5;
+  max-width: 720px;
+  margin: var(--space-6) auto var(--space-6);
+}
+.fc-promise-sub { font-size: var(--text-md); color: rgba(255,255,255,0.7); max-width: 640px; margin: 0 auto; line-height: 1.7; }
+
+/* ── AUDIENCE CARDS (grid wrapper; cards reuse .location-card) ──── */
+.fc-audience-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-5); }
+@media (max-width: 768px) { .fc-audience-grid { grid-template-columns: 1fr; } }
+
+.fc-underline { width: 40px; height: 2px; background: var(--gold); border: none; margin: var(--space-3) 0 var(--space-5); }
+
+.fc-audience-list { list-style: none; }
+.fc-audience-list li { position: relative; padding-left: 20px; margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--ink-mid); line-height: 1.6; }
+.fc-audience-list li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+/* ── BOUNDARY STATEMENT CARDS ──────────────────────────── */
+.fc-boundary-card {
+  background: var(--ivory-mid);
+  border-radius: var(--r-md);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-mid);
+  line-height: 1.6;
+}
+
+/* ── DOCTOR BIO ────────────────────────────────────────── */
+.fc-doctor-block { text-align: center; }
+.fc-doctor-photo {
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto var(--space-6);
+  box-shadow: var(--shadow-lg);
+  border: 5px solid var(--white);
+}
+.fc-doctor-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.fc-doctor-subtitle { font-size: var(--text-sm); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--teal); margin-bottom: var(--space-5); }
+.fc-doctor-bio { font-size: var(--text-md); color: var(--ink-light); line-height: 1.75; max-width: 620px; margin: 0 auto; }
+
+/* ── FAQ CHEVRON (rotate-on-open, mirrors the existing
+      .mb-past-details[open] summary::before pattern) ──────── */
+.fc-faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.fc-faq-chevron { flex-shrink: 0; transition: transform 0.2s ease; color: var(--teal); }
+.fc-faq-item[open] .fc-faq-chevron { transform: rotate(180deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-faq-chevron { transition: none; }
+}
