@@ -3231,3 +3231,50 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .fc-faq-chevron { transition: none; }
 }
+
+/* ── DR PUJA'S CLINIC CONSENT BANNERS ────────────────────────────────────────── */
+.dpc-consent-banner {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 1500; /* below .bw-overlay/.mb-overlay (2000) so modals always win; above nav (1000) */
+  background: var(--white);
+  border-top: 1px solid var(--ivory-dark);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5) var(--space-6);
+}
+.dpc-consent-banner[hidden] { display: none; }
+
+.dpc-consent-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+.dpc-consent-text { flex: 1; min-width: 240px; font-size: var(--text-sm); color: var(--ink-mid); line-height: 1.6; margin: 0; }
+.dpc-consent-text a { color: var(--teal); font-weight: 600; text-decoration: underline; }
+.dpc-consent-actions { display: flex; gap: var(--space-3); flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .dpc-consent-inner { flex-direction: column; align-items: stretch; text-align: center; }
+  .dpc-consent-actions { justify-content: center; }
+}
+
+/* Shift the floating buttons up while the banner is visible so nothing overlaps —
+   same pattern already used for .footer/.location-earliest-slot FAB clearance. */
+body.dpc-consent-visible .chat-fab,
+body.dpc-consent-visible .whatsapp-float {
+  bottom: 100px;
+}
+@media (max-width: 640px) {
+  body.dpc-consent-visible .chat-fab,
+  body.dpc-consent-visible .whatsapp-float {
+    bottom: 150px; /* banner is taller once it stacks vertically on mobile */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dpc-consent-banner { transition: none; }
+}

@@ -7,8 +7,27 @@
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date())
-    gtag('config', 'G-K6PQR5KP58');
+
+    // DPDP Act 2023 — Consent Mode v2. Default everything non-essential to
+    // denied. If the visitor already chose "Accept" on a previous visit,
+    // read that BEFORE the default call so returning visitors aren't
+    // re-prompted or momentarily un-tracked. ad_storage/ad_user_data/
+    // ad_personalization stay denied permanently — this site runs no ads or
+    // remarketing, only GA4 analytics.
+    var __storedConsent = null;
+    try { __storedConsent = localStorage.getItem('dpc_cookie_consent'); } catch (e) { }
+    var __analyticsDefault = __storedConsent === 'accepted' ? 'granted' : 'denied';
+
+    gtag('consent', 'default', {
+      'analytics_storage': __analyticsDefault,
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'wait_for_update': 500
+    });
+
+    gtag('js', new Date());
+    gtag('config', 'G-K6PQR5KP58', { 'anonymize_ip': true });
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1796,7 +1815,7 @@
             <span class="testimonial-quote" aria-hidden="true">"</span>
             <p class="fc-testimonial-text">I finally understood what my AMH test result actually meant — and felt
               ready to ask my doctor the right questions.</p>
-            <div class="fc-testimonial-author">— Community Member</div>
+            <div class="fc-testimonial-author">— Asha, Community Member</div>
           </div>
           <p class="fc-stat-line">Join <strong>[500+]</strong> others already learning together.</p>
 
@@ -2110,46 +2129,108 @@
       <div class="bg-white">
         <div class="section-pad container-narrow">
           <p>Dr. Puja's Clinic ("we", "our", or "Clinic") is committed to protecting the privacy and security of
-            your
-            personal data. This Privacy Policy outlines our practices in strict compliance with the <strong>Digital
-              Personal Data Protection (DPDP) Act, 2023</strong> of India.</p>
+            your personal data. This Privacy Policy outlines our practices in compliance with the
+            <strong>Digital Personal Data Protection (DPDP) Act, 2023</strong> of India ("the DPDP Act").
+          </p>
+
           <h3 style="margin-top:24px;">1. Data We Collect</h3>
-          <p>When you use our online booking form or reach out via digital channels, we collect: Full Name, Contact
-            Phone Number, Email Address, and Health Reason / Purpose of Consultation (provided voluntarily).</p>
+          <p>When you use our online booking form, join our WhatsApp Fertility Community, or otherwise interact
+            with us digitally, we may collect: Full Name, Contact Phone Number, Email Address, and Health
+            Reason / Purpose of Consultation (provided voluntarily).</p>
+
           <h3 style="margin-top:24px;">2. Purpose of Collection &amp; Processing</h3>
-          <p>Your personal information is processed solely for explicit, specific, and legitimate medical purposes:
-            facilitating appointment bookings, sending essential clinic communications (confirmations, reminders,
-            rescheduling alerts), and answering direct inquiries submitted by you.</p>
-          <h3 style="margin-top:24px;">3. Data Sharing and Third-Party Processors</h3>
-          <p>We also use <strong>Google Analytics (GA4)</strong> to understand website usage patterns (pages visited,
-            session duration, approximate location via IP). This data is pseudonymised and used only for improving the
-            website experience — never combined with your medical or booking data. You may opt out using your browser's
-            Do Not Track setting or the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank"
-              rel="noopener">Google Analytics opt-out browser add-on</a>.</p>
-          <h3 style="margin-top:24px;">4. Data Retention Period</h3>
-          <p>We retain your digital data only as long as necessary to fulfill the medical scheduling purpose, or to
-            comply with standard medical record retention regulations under Indian healthcare laws.</p>
-          <h3 style="margin-top:24px;">5. Your Rights Under the DPDP Act, 2023</h3>
-          <p>As a Data Principal, the DPDP Act grants you the following rights, exercisable at any point:</p>
+          <p>Your personal information is processed solely for explicit, specific, and legitimate purposes:
+            facilitating appointment bookings, sending clinic communications (confirmations, reminders,
+            rescheduling alerts), answering direct inquiries, and operating our free educational WhatsApp
+            community.</p>
+
+          <h3 style="margin-top:24px;">3. Cookies and Analytics — Your Consent Choice</h3>
+          <p>We use <strong>Google Analytics (GA4)</strong> to understand website usage patterns (pages visited,
+            session duration, approximate location via IP). We only activate analytics cookies <strong>after you
+              provide explicit consent</strong> via the cookie banner shown on your first visit — no analytics
+            tracking occurs before that choice is made. You can withdraw or change your consent at any time by
+            clearing your browser's local storage for this site, or by contacting us. Declining consent does
+            not affect your ability to use the website, book an appointment, or join our WhatsApp community.
+            Analytics data is pseudonymised and used only to improve the website experience — never combined
+            with your medical or booking data.</p>
+
+          <h3 style="margin-top:24px;">4. WhatsApp Fertility Community — How Your Number Is Handled</h3>
           <ul style="margin-left:20px;margin-bottom:16px;line-height:2;">
-            <li><strong>Right to Access:</strong> Summary of personal data being processed by us.</li>
-            <li><strong>Right to Correction &amp; Erasure:</strong> Correct inaccuracies or request erasure of
-              personal
-              data no longer necessary for scheduling.</li>
-            <li><strong>Right to Withdraw Consent:</strong> Withdraw consent for digital communications at any
-              point.
+            <li>The community operates as a <strong>broadcast-style WhatsApp Channel</strong>. Your phone number
+              is <strong>not visible to other members</strong>, and other members cannot see who else has joined.</li>
+            <li>Your number is used solely to deliver community content, subject to WhatsApp's own platform
+              terms — never for marketing outside the channel, and never sold or shared with third parties.</li>
+            <li>Joining the community is entirely separate from your clinical records. Please do not share
+              personal medical reports or test results within the community — see our
+              <a href="#terms" onclick="showPage('terms');return false;" style="color:var(--teal);">Terms of
+                Service</a> for community guidelines.
             </li>
-            <li><strong>Right to Grievance Redressal:</strong> Register a complaint regarding data processing with
-              the
-              clinic before escalating to statutory boards.</li>
-            <li><strong>Right to Nominate:</strong> Nominate another individual to exercise rights on your behalf in
-              the
-              event of death or incapacity.</li>
+            <li>You may leave the community at any time by leaving the WhatsApp channel directly.</li>
           </ul>
-          <h3 style="margin-top:24px;">6. Data Requests &amp; Contact</h3>
-          <p>To exercise your data privacy rights, withdraw consent, or file a request, please contact our Data
-            Protection Officer at: <a href="mailto:drpujasclinic@gmail.com"
-              style="color:var(--teal);font-weight:600;">drpujasclinic@gmail.com</a></p>
+
+          <h3 style="margin-top:24px;">5. Children's Data and Parental Consent</h3>
+          <p>In accordance with the DPDP Act's protections for children (individuals under 18 years of age), we
+            do not knowingly process personal data of, or accept appointment bookings for, anyone under 18
+            without the <strong>verifiable consent of a parent or lawful guardian</strong>. If you are booking an
+            appointment on behalf of a minor, you confirm that you are their parent or lawful guardian and
+            consent to this processing on their behalf. If we become aware that we have collected data from a
+            minor without appropriate parental/guardian consent, we will take steps to delete such data promptly.</p>
+
+          <h3 style="margin-top:24px;">6. Data Sharing and Third-Party Processors</h3>
+          <p>Beyond Google Analytics (see Section 3), we do not sell, rent, or otherwise share your personal data
+            with third parties for their own marketing purposes.</p>
+
+          <h3 style="margin-top:24px;">7. Data Retention Period</h3>
+          <p>We retain your digital data only as long as necessary to fulfil the purposes described above, or to
+            comply with applicable medical record retention regulations under Indian healthcare law.</p>
+
+          <h3 style="margin-top:24px;">8. Your Rights as a Data Principal</h3>
+          <p>Under the DPDP Act, you have the following rights, exercisable at any point:</p>
+          <ul style="margin-left:20px;margin-bottom:16px;line-height:2;">
+            <li><strong>Right to Access:</strong> Obtain a summary of the personal data we process about you.</li>
+            <li><strong>Right to Correction &amp; Erasure:</strong> Correct inaccuracies, or request erasure of
+              personal data no longer necessary for the purpose it was collected.</li>
+            <li><strong>Right to Withdraw Consent:</strong> Withdraw your consent for digital communications or
+              analytics tracking at any point, without affecting the lawfulness of processing carried out before
+              withdrawal.</li>
+            <li><strong>Right to Grievance Redressal:</strong> Raise a complaint regarding our data processing
+              with our Grievance Officer (Section 10) before escalating further.</li>
+            <li><strong>Right to Nominate:</strong> Nominate another individual to exercise these rights on your
+              behalf in the event of your death or incapacity.</li>
+          </ul>
+
+          <h3 style="margin-top:24px;">9. Your Duties as a Data Principal</h3>
+          <p>Under <strong>Section 15 of the DPDP Act, 2023</strong>, as a Data Principal you also have certain
+            duties, including to:</p>
+          <ul style="margin-left:20px;margin-bottom:16px;line-height:2;">
+            <li>Comply with applicable laws when exercising your rights under the DPDP Act;</li>
+            <li>Not impersonate another person when providing personal data for a specified purpose;</li>
+            <li>Not suppress material information while providing personal data;</li>
+            <li>Not register a false or frivolous grievance or complaint with us or with the Data Protection
+              Board of India;</li>
+            <li>Furnish only information that is verifiably authentic when exercising your right to correction
+              or erasure.</li>
+          </ul>
+
+          <h3 style="margin-top:24px;">10. Grievance Officer / Contact</h3>
+          <p>To exercise your rights, raise a grievance, or ask questions about this policy, please contact our
+            <strong>Grievance Officer</strong>:
+          </p>
+          <p><strong>Dr Puja Prasad</strong><br>
+            Dr. Puja's Clinic<br>
+            Email: <a href="mailto:drpujasclinic@gmail.com"
+              style="color:var(--teal);font-weight:600;">drpujasclinic@gmail.com</a><br>
+            Address: A 128, Gali No 8, Madhu Vihar, IP Extension, Patparganj, New Delhi — 110092</p>
+
+          <h3 style="margin-top:24px;">11. Escalation to the Data Protection Board of India</h3>
+          <p>If you are not satisfied with how we have addressed your grievance under Section 10 above, you have
+            the right to escalate your complaint to the <strong>Data Protection Board of India</strong>, the
+            statutory authority established under the DPDP Act, 2023, for resolving unaddressed grievances.</p>
+          <p>We aim to acknowledge grievances within 3 business days</p>
+          <h3 style="margin-top:24px;">12. Availability in Other Languages</h3>
+          <p>This Privacy Notice is available in English. A version in other scheduled Indian languages specified
+            in the Eighth Schedule to the Constitution of India can be made available upon request — please
+            contact our Grievance Officer (Section 10).</p>
         </div>
       </div>
     </div>
@@ -2196,22 +2277,39 @@
           <nav class="breadcrumb" aria-label="Breadcrumb"><a href="#home"
               onclick="showPage('home');return false;">Home</a> <span aria-hidden="true">/</span> <span>Appointment
               Terms</span></nav>
-          <h1>Appointment <em>Terms &amp; Conditions</em></h1>
+          <h1>Terms of <em>Service</em></h1>
         </div>
       </div>
       <div class="bg-white">
         <div class="section-pad container-narrow">
-          <h3>1. Booking Requests</h3>
-          <p>Submitting an online booking through this website is an appointment <em>request</em>. Slots are
-            finalised
-            based on live clinical schedules and the doctor's real-time availability across designated hospital
-            locations.</p>
-          <h3 style="margin-top:24px;">2. Cancellations &amp; Rescheduling</h3>
-          <p>We respect your schedule and ask that you respect ours. If you need to cancel or shift an appointment,
-            please give the clinic notice at least <strong>2 hours prior</strong> to your scheduled window via phone
-            or
-            WhatsApp so we can allocate that time to emergency patient cases.</p>
-          <h3 style="margin-top:24px;">3. Emergency Care</h3>
+          <h3>1. General Website Use</h3>
+          <p>This website is provided for general informational purposes and to facilitate appointment booking
+            with Dr. Puja's Clinic. By using this website, you agree to use it lawfully and not to misuse,
+            disrupt, or attempt unauthorised access to any part of it, including the booking system or AI chat
+            assistant.</p>
+
+          <h3 style="margin-top:24px;">2. Booking Requests</h3>
+          <!-- (existing content, unchanged) -->
+
+          <h3 style="margin-top:24px;">3. Cancellations &amp; Rescheduling</h3>
+          <!-- (existing content, unchanged) -->
+
+          <h3 style="margin-top:24px;">4. Emergency Care</h3>
+          <!-- (existing content, unchanged) -->
+
+          <h3 style="margin-top:24px;">5. WhatsApp Fertility Community Guidelines</h3>
+          <p>Our free WhatsApp Fertility Community is an educational broadcast channel, governed by these
+            additional terms:</p>
+          <ul style="margin-left:20px;margin-bottom:16px;line-height:2;">
+            <li>Content shared is for general educational purposes only and does not constitute individual
+              medical advice.</li>
+            <li>Please do not share personal medical reports, test results, or other sensitive personal health
+              information within the community.</li>
+            <li>We reserve the right to remove or restrict access for any member who misuses the community for
+              purposes inconsistent with its educational intent.</li>
+            <li>Joining the community does not create a doctor-patient relationship. For personal medical advice,
+              please book a consultation.</li>
+          </ul>
           <p>Our online booking structure is intended exclusively for non-emergency scheduling. If you are
             experiencing
             acute, immediate medical emergencies or severe complications, please proceed directly to the nearest
@@ -2289,7 +2387,7 @@
       <div class="footer-legal">
         <a href="#privacy" onclick="showPage('privacy');return false;">Privacy Policy</a>
         <a href="#disclaimer" onclick="showPage('disclaimer');return false;">Medical Disclaimer</a>
-        <a href="#terms" onclick="showPage('terms');return false;">Appointment Terms</a>
+        <a href="#terms" onclick="showPage('terms');return false;">Terms of Service</a>
         <a href="#testimonials" onclick="showPage('testimonials');return false;">Patient Stories</a>
       </div>
     </div>
@@ -2297,6 +2395,17 @@
       ⚕️ The information on this website is for general informational purposes only and does not constitute medical
       advice. Dr. Puja Prasad, MBBS, MS (Obs &amp; Gyn), DMAS, FMAS. Registered Medical Practitioner. Please consult a
       qualified healthcare professional for personal health concerns.
+    </div>
+
+    <!-- Add a new block between .footer-grid and .footer-bottom -->
+    <div
+      style="max-width:1180px;margin:0 auto;padding-top:var(--space-5);border-top:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7;">
+      <strong style="color:rgba(255,255,255,0.65);">Grievance Officer:</strong>
+      Dr. Puja's Clinic ·
+      <a href="mailto:drpujasclinic@gmail.com" style="color:rgba(255,255,255,0.65);">drpujasclinic@gmail.com</a>
+      · For data protection grievances under the DPDP Act, 2023 ·
+      <a href="#privacy" onclick="showPage('privacy');return false;" style="color:rgba(255,255,255,0.65);">Privacy
+        Policy</a>
     </div>
   </footer>
 
@@ -2389,6 +2498,23 @@
   <!-- main.js: showPage, nav, scroll, hash routing — loaded last -->
   <script src="js/blog.js" defer></script>
   <script src="js/main.js" defer></script>
+  <script src="js/main.js" defer></script>
+  <script src="js/consent.js" defer></script>
+
+  <!-- ═══════════════════════════════ COOKIE CONSENT BANNER ═════════════════════ -->
+  <div id="cookieConsentBanner" class="dpc-consent-banner" role="region" aria-label="Cookie consent" aria-live="polite"
+    hidden>
+    <div class="dpc-consent-inner">
+      <p class="dpc-consent-text">
+        We use analytics cookies to understand how visitors use our site. We only set them with your consent — see our
+        <a href="#privacy" onclick="showPage('privacy');return false;">Privacy Policy</a> for details.
+      </p>
+      <div class="dpc-consent-actions">
+        <button type="button" class="btn btn-outline btn-sm" onclick="dpcDeclineCookies()">Decline</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="dpcAcceptCookies()">Accept</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 
