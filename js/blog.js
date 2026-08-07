@@ -70,6 +70,24 @@ async function blogLoadFeatured() {
   }
 }
 
+// ADD this new function:
+async function blogLoadCategoryCounts() {
+  try {
+    const res = await bwApi('/blog/categories');
+    if (!res || !res.success || !Array.isArray(res.categories)) return;
+    res.categories.forEach(c => {
+      const card = document.querySelector(`.blog-category-card[data-category-slug="${c.slug}"]`);
+      const badge = card?.querySelector('.blog-category-count-badge');
+      if (badge) {
+        badge.textContent = `${c.article_count} article${c.article_count === 1 ? '' : 's'}`;
+      }
+    });
+  } catch (err) {
+    // Supplementary, non-critical UI — fail silently, badges just stay empty
+    // rather than showing an error message for something this minor.
+  }
+}
+
 // ── LISTING: pagination ─────────────────────────────────────────────────────
 async function blogLoadArticles(append = false) {
   if (blogState.loading) return;
@@ -180,8 +198,11 @@ function blogInit() {
   blogRenderActiveFilterBadge();
   blogLoadFeatured();
   blogLoadArticles();
+  blogLoadCategoryCounts();   // ← new
   blogState.initialized = true;
 }
+
+
 
 // ── ARTICLE DETAIL ──────────────────────────────────────────────────────────
 function blogRenderBlock(block) {
