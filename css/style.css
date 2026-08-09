@@ -2566,7 +2566,7 @@ textarea {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-16);
-  align-items: start;
+  align-items: stretch;
 }
 
 .contact-info-list {
@@ -2655,6 +2655,23 @@ textarea {
   width: 100%;
   height: 100%;
   border: none;
+}
+
+/* ADD — new rules */
+.contact-left-col {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.map-embed.fc-flex-map {
+  height: auto;
+  flex: 1 1 auto;
+  min-height: 240px;
+}
+
+.clinic-map {
+  background: var(--ivory-mid); /* visible tone while map tiles load, avoids a stark white flash */
 }
 
 .form-card {
@@ -3277,25 +3294,4 @@ body.dpc-consent-visible .whatsapp-float {
 
 @media (prefers-reduced-motion: reduce) {
   .dpc-consent-banner { transition: none; }
-}
-
-gmpx-store-locator {
-  width: 100%;
-  height: 100%;
-  display: block;
-
-  --gmpx-color-surface: var(--white);
-  --gmpx-color-on-surface: var(--ink);
-  --gmpx-color-on-surface-variant: var(--ink-light);
-  --gmpx-color-primary: var(--teal);
-  --gmpx-color-outline: var(--ivory-dark);
-  --gmpx-fixed-panel-width-row-layout: 22em;
-  --gmpx-fixed-panel-height-column-layout: 65%;
-  --gmpx-font-family-base: var(--font-body);
-  --gmpx-font-family-headings: var(--font-display);
-  --gmpx-font-size-base: 14px;
-  --gmpx-hours-color-open: var(--success);
-  --gmpx-hours-color-closed: var(--error);
-  --gmpx-rating-color: var(--gold);
-  --gmpx-rating-color-empty: var(--ivory-dark);
 }

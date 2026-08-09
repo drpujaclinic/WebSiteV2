@@ -1,59 +1,76 @@
 /**
  * DR. PUJA'S CLINIC — maps-locator.js
- * Configures the <gmpx-store-locator> web component (Google Maps Extended
- * Component Library). Two instances exist on the page (Locations + Contact),
- * both showing the same single verified location — configure every instance
- * found, not just one, since the library's own quick-start example only
- * expects a single instance per page.
- *
- * Only Madhu Vihar (the primary clinic) has a verified lat/lng + Place ID.
- * Do NOT add Pushpanjali/Max/Femmenest here without their real, verified
- * coordinates — an incorrect pin on a medical facility map risks sending a
- * patient to the wrong building.
+ * Plain Google Maps JS API implementation — NOT the gmpx-store-locator web
+ * component. Switched away from that component because:
+ *   1. Its location list/detail panel is a core, non-optional part of the
+ *      component (confirmed via the library's own README) — no documented
+ *      way exists to hide just the "All locations (N)" header while
+ *      keeping the rest, short of undocumented shadow-DOM hacking.
+ *   2. That same panel is the near-certain source of the "address
+ *      disappears on interaction" bug — its visible state was tied to map
+ *      interaction in ways we don't control. A plain map has no competing
+ *      internal UI; the clinic name/address/directions link live in
+ *      normal page HTML, entirely independent of the map.
+ * Two map instances exist on the page (Locations + Contact), both showing
+ * the same single verified location.
  */
 'use strict';
 
-const CLINIC_LOCATOR_CONFIG = {
-  locations: [
-    {
-      title: "Dr. Puja's Clinic",
-      address1: 'A 128, Gali No 8, Sai Chowk',
-      address2: 'Madhu Vihar, IP Extension, Patparganj, New Delhi — 110092, India',
-      coords: { lat: 28.634981, lng: 77.304487 },
-      placeId: 'ChIJPa56mkv7DDkR61eKQthHoys',
-    },
-  ],
-  mapOptions: {
-    // FIXED: source snippet had {lat:38.0, lng:-100.0} — Google's own Quick
-    // Builder demo placeholder (center of the continental US), not the
-    // clinic. Using the real coordinates here instead.
-    center: { lat: 28.634981, lng: 77.304487 },
-    fullscreenControl: true,
-    mapTypeControl: false,
-    streetViewControl: false,
-    zoom: 15,
-    zoomControl: true,
-    maxZoom: 17,
-    mapId: '3d1111d8d9c1fe041800388f',
-  },
-  mapsApiKey: 'AIzaSyAzlrtDQYk_gLcLUQxrKH-YSeoO4ag4cW4',
-  // Search/autocomplete/directions/details/actions all disabled — this is a
-  // single-location "here we are" map, not a multi-branch locator. The site
-  // already has its own explicit Directions/Call/WhatsApp buttons next to
-  // each location card, so the widget's own action row would be redundant.
-  capabilities: {
-    input: false,
-    autocomplete: false,
-    directions: false,
-    distanceMatrix: false,
-    details: false,
-    actions: false,
-  },
-};
-
-document.addEventListener('DOMContentLoaded', async () => {
-  await customElements.whenDefined('gmpx-store-locator');
-  document.querySelectorAll('gmpx-store-locator').forEach(locator => {
-    locator.configureFromQuickBuilder(CLINIC_LOCATOR_CONFIG);
-  });
+// ── Official Google Maps JS API bootstrap loader (dynamic library import
+//    pattern). Source: Google's own documented snippet at
+//    https://developers.google.com/maps/documentation/javascript/load-maps-js-api
+//    Using this instead of <gmpx-api-loader> since we no longer load any
+//    part of the Extended Component Library.
+(g => {
+  var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window;
+  b = b[c] || (b[c] = {});
+  var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams,
+    u = () => h || (h = new Promise(async (f, n) => {
+      await (a = m.createElement("script"));
+      e.set("libraries", [...r] + "");
+      for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]);
+      e.set("callback", c + ".maps." + q);
+      a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+      d[q] = f;
+      a.onerror = () => h = n(Error(p + " could not load."));
+      a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+      m.head.append(a);
+    }));
+  d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n));
+})({
+  key: "AIzaSyAzlrtDQYk_gLcLUQxrKH-YSeoO4ag4cW4",
+  v: "weekly",
 });
+
+const CLINIC_COORDS = { lat: 28.634981, lng: 77.304487 };
+const CLINIC_MAP_ID = '3d1111d8d9c1fe041800388f';
+
+async function initClinicMaps() {
+  const { Map } = await google.maps.importLibrary('maps');
+  const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
+
+  document.querySelectorAll('.clinic-map').forEach(container => {
+    const map = new Map(container, {
+      center: CLINIC_COORDS, // = the marker's own position — pin is guaranteed centered/visible on load
+      zoom: 16,
+      mapId: CLINIC_MAP_ID,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+      zoomControl: true,
+      maxZoom: 17,
+      // 'cooperative': one-finger touch scrolls the PAGE, not the map;
+      // two fingers (or ctrl+scroll on desktop) pans/zooms the map instead.
+      // Stops the embedded map from hijacking page scroll on mobile.
+      gestureHandling: 'cooperative',
+    });
+
+    new AdvancedMarkerElement({
+      map,
+      position: CLINIC_COORDS,
+      title: "Dr. Puja's Clinic",
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initClinicMaps);
