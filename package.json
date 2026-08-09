@@ -1,0 +1,26 @@
+{
+  "name": "websitev2",
+  "version": "1.0.0",
+  "description": "A responsive, SEO-optimized, and accessible medical practice website for [drpujaprasad.in](https://drpujaprasad.in). This repository contains the source code for the front-end architecture, modular booking system, and web infrastructure.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drpujaclinic/WebSiteV2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/drpujaclinic/WebSiteV2/issues"
+  },
+  "homepage": "https://github.com/drpujaclinic/WebSiteV2#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^4.3.3"
+  }
+}
