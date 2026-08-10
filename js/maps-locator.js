@@ -1,26 +1,25 @@
 /**
  * DR. PUJA'S CLINIC — maps-locator.js
- * Plain Google Maps JS API implementation — NOT the gmpx-store-locator web
- * component. Switched away from that component because:
- *   1. Its location list/detail panel is a core, non-optional part of the
- *      component (confirmed via the library's own README) — no documented
- *      way exists to hide just the "All locations (N)" header while
- *      keeping the rest, short of undocumented shadow-DOM hacking.
- *   2. That same panel is the near-certain source of the "address
- *      disappears on interaction" bug — its visible state was tied to map
- *      interaction in ways we don't control. A plain map has no competing
- *      internal UI; the clinic name/address/directions link live in
- *      normal page HTML, entirely independent of the map.
+ * Plain Google Maps JS API implementation (no Extended Component Library).
  * Two map instances exist on the page (Locations + Contact), both showing
  * the same single verified location.
+ *
+ * IMPORTANT: initClinicMaps() is intentionally NOT called on DOMContentLoaded.
+ * Both Locations and Contact pages are hidden (display:none) by default —
+ * only Home is active on first load. Initializing a google.maps.Map (and
+ * especially an AdvancedMarkerElement) inside a hidden container causes
+ * incorrect size/position calculations that don't self-correct once the
+ * container becomes visible. So instead, main.js calls initClinicMaps()
+ * from inside showPage() specifically when name is 'locations' or
+ * 'contact' — i.e., only once that page's container is actually visible.
+ * initClinicMaps() is idempotent (skips already-initialized containers via
+ * data-map-initialized), so calling it repeatedly on every page visit is safe.
  */
 'use strict';
 
 // ── Official Google Maps JS API bootstrap loader (dynamic library import
 //    pattern). Source: Google's own documented snippet at
 //    https://developers.google.com/maps/documentation/javascript/load-maps-js-api
-//    Using this instead of <gmpx-api-loader> since we no longer load any
-//    part of the Extended Component Library.
 (g => {
   var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window;
   b = b[c] || (b[c] = {});
@@ -45,11 +44,22 @@
 const CLINIC_COORDS = { lat: 28.634981, lng: 77.304487 };
 const CLINIC_MAP_ID = '3d1111d8d9c1fe041800388f';
 
+/**
+ * Initializes every not-yet-initialized .clinic-map container currently
+ * in the DOM. Safe to call repeatedly — already-initialized containers
+ * are skipped via the data-map-initialized flag.
+ */
 async function initClinicMaps() {
+  const containers = document.querySelectorAll('.clinic-map:not([data-map-initialized])');
+  if (containers.length === 0) return;
+
   const { Map } = await google.maps.importLibrary('maps');
   const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
 
-  document.querySelectorAll('.clinic-map').forEach(container => {
+  containers.forEach(container => {
+    if (container.dataset.mapInitialized) return; // re-check post-await, guards a rare double-call race
+    container.dataset.mapInitialized = 'true';
+
     const map = new Map(container, {
       center: CLINIC_COORDS, // = the marker's own position — pin is guaranteed centered/visible on load
       zoom: 16,
@@ -59,9 +69,6 @@ async function initClinicMaps() {
       fullscreenControl: true,
       zoomControl: true,
       maxZoom: 17,
-      // 'cooperative': one-finger touch scrolls the PAGE, not the map;
-      // two fingers (or ctrl+scroll on desktop) pans/zooms the map instead.
-      // Stops the embedded map from hijacking page scroll on mobile.
       gestureHandling: 'cooperative',
     });
 
@@ -72,5 +79,3 @@ async function initClinicMaps() {
     });
   });
 }
-
-document.addEventListener('DOMContentLoaded', initClinicMaps);
