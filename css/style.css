@@ -713,7 +713,7 @@ textarea {
   font-family: var(--font-display);
   font-size: 32px;
   font-weight: 700;
-  color: var(--teal);
+  color: var(--ink);
   line-height: 1;
   margin-bottom: 3px;
 }
@@ -2670,6 +2670,16 @@ textarea {
   min-height: 240px;
 }
 
+/* Locations page: .map-embed's base height:200px + overflow:hidden was
+   clipping the square aspect-ratio wrapper down to a 200px sliver, which
+   pushed the (correctly-centered) marker below the visible crop. This
+   wrapper opts the Locations map out of the base rule's fixed height so
+   the square wrapper can render at its full, self-determined height. */
+.map-embed.map-embed-square {
+  height: auto;
+  overflow: visible;
+}
+
 .clinic-map {
   background: var(--ivory-mid); /* visible tone while map tiles load, avoids a stark white flash */
 }
@@ -3294,4 +3304,51 @@ body.dpc-consent-visible .whatsapp-float {
 
 @media (prefers-reduced-motion: reduce) {
   .dpc-consent-banner { transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOME PAGE — REDESIGN PILOT (scoped to #page-home only)
+   Everything below is intentionally isolated from the rest of the
+   site so it can be reviewed, adjusted, or reverted without any
+   risk to other pages. Nothing here touches booking widget,
+   consent, structured data, or routing.
+
+   1. Typography: Lora replaces Playfair Display as the display face
+      for headings on Home only — sharper, more structural letterforms,
+      less editorial/decorative, better fit for a clinical-trust context.
+      Rest of the site keeps Playfair Display until/unless approved
+      to roll further.
+   2. Signature motif (.exp-mark): a small recurring "tick" mark under
+      the practice's 23-years stats, echoing a timeline/measurement —
+      the one deliberate visual signature for this pass, used sparingly
+      (hero stat + Why Choose stat only), not as a generic decoration.
+═══════════════════════════════════════════════════════════ */
+
+#page-home {
+  --font-display: 'Lora', Georgia, serif;
+}
+
+.exp-mark {
+  position: relative;
+  display: inline-block;
+}
+
+.exp-mark::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  bottom: -9px;
+  width: 26px;
+  height: 2px;
+  background: var(--gold);
+}
+
+.exp-mark::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  bottom: -12px;
+  width: 2px;
+  height: 8px;
+  background: var(--gold);
 }
