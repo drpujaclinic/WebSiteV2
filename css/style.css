@@ -2678,6 +2678,9 @@ textarea {
 .map-embed.map-embed-square {
   height: auto;
   overflow: visible;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .clinic-map {
