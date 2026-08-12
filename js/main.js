@@ -28,7 +28,6 @@ function showPage(name) {
     if (titles[name]) document.title = titles[name];
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (name === 'blog' && typeof blogInit === 'function') blogInit();
-     if ((name === 'locations' || name === 'contact') && typeof initClinicMaps === 'function') initClinicMaps();
   }
   document.querySelectorAll('.nav-links a').forEach(a => {
     a.classList.remove('active');
