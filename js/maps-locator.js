@@ -37,12 +37,12 @@
     }));
   d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n));
 })({
-  key: "AIzaSyAzlrtDQYk_gLcLUQxrKH-YSeoO4ag4cW4",
+  key: "AIzaSyCYpWS5PoiYJm5ugtE86mxV7ySXjpcSH5M",
   v: "weekly",
 });
 
 const CLINIC_COORDS = { lat: 28.634981, lng: 77.304487 };
-const CLINIC_MAP_ID = '3d1111d8d9c1fe041800388f';
+const CLINIC_MAP_ID = '6ff3094e33a89b485b929097';
 
 /**
  * Initializes every not-yet-initialized .clinic-map container currently
