@@ -3219,6 +3219,203 @@ textarea {
 .fc-hcp-callout a { color: var(--teal); font-weight: 600; text-decoration: none; }
 .fc-hcp-callout a:hover { text-decoration: underline; }
 
+/* ── JOURNEY GATEWAY — "Where are you in your journey?" (5 pathway cards) ── */
+.fc-gateway-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-4);
+}
+@media (max-width: 900px) {
+  .fc-gateway-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .fc-gateway-grid { grid-template-columns: 1fr; }
+}
+.fc-gateway-card {
+  display: block;
+  background: var(--white);
+  border: 1px solid var(--ivory-dark);
+  border-radius: var(--r-md);
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+  text-decoration: none;
+  transition: all var(--dur) var(--ease);
+}
+.fc-gateway-card:hover {
+  border-color: var(--teal);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.fc-gateway-icon {
+  display: block;
+  font-size: 28px;
+  margin-bottom: var(--space-3);
+}
+.fc-gateway-card h4 {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.fc-gateway-card p {
+  font-size: 12px;
+  color: var(--ink-light);
+  line-height: 1.5;
+}
+
+/* ── FERTILITY QUESTIONNAIRE (reuses .bw-sheet/.bw-overlay/.bw-form-* from booking-widget.css) ── */
+.fq-body {
+  padding: 4px var(--bw-pad, 20px) 20px;
+}
+.fq-intro {
+  font-size: 13px;
+  color: var(--ink-light);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.fq-section {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--ivory-dark);
+}
+.fq-section:last-of-type {
+  border-bottom: none;
+}
+.fq-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.fq-optional {
+  font-weight: 400;
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+.fq-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-mid);
+  line-height: 1.5;
+}
+.fq-check-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+.fq-redflags {
+  background: var(--teal-ghost);
+  border-radius: var(--r-md);
+  padding: 16px 16px 8px;
+  border-bottom: none;
+}
+.fq-redflags-note {
+  font-size: 12px;
+  color: var(--ink-light);
+  margin-bottom: 8px;
+}
+.fq-demo-row {
+  display: flex;
+  gap: 12px;
+}
+.fq-contact-toggle {
+  background: var(--ivory);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.fq-privacy-note {
+  font-size: 11px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.fq-privacy-note a {
+  color: var(--teal);
+  text-decoration: underline;
+}
+.fq-error {
+  font-size: 12px;
+  color: var(--error);
+  text-align: center;
+  min-height: 16px;
+  margin-bottom: 8px;
+}
+
+/* Results screen */
+.fq-success-wrap {
+  text-align: center;
+}
+.fq-success-tick {
+  font-size: 44px;
+  margin-bottom: 10px;
+}
+.fq-success-wrap h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.fq-followup-banner {
+  background: var(--gold-pale);
+  border: 1px solid rgba(184, 146, 42, 0.25);
+  border-radius: var(--r-md);
+  padding: 16px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.fq-followup-banner strong {
+  display: block;
+  color: var(--ink);
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.fq-followup-banner p {
+  font-size: 12px;
+  color: var(--ink-light);
+  margin-bottom: 10px;
+}
+.fq-result-row {
+  text-align: left;
+  border: 1px solid var(--ivory-dark);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.fq-result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.fq-result-head span:first-child {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.fq-result-row p {
+  font-size: 12.5px;
+  color: var(--ink-light);
+  line-height: 1.55;
+}
+.fq-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--r-full);
+  white-space: nowrap;
+}
+.fq-status-strong { background: var(--sage-pale); color: var(--sage); }
+.fq-status-attention { background: var(--gold-pale); color: var(--gold); }
+.fq-status-focus { background: var(--teal-ghost); color: var(--teal); }
+
 /* ── SOCIAL PROOF — reuses .testimonial-quote (existing decorative mark) ── */
 .fc-testimonial-card {
   max-width: 560px;

@@ -795,6 +795,8 @@
               <div class="service-hub-reading">Also: <a href="#fertility-community"
                   onclick="showPage('fertility-community');return false;">Join our free Fertility Education Community
                   →</a></div>
+              <div class="service-hub-reading"><a href="files/couple-fertility-checklist.pdf" target="_blank"
+                  rel="noopener noreferrer">📋 Download the Couple Fertility Checklist (PDF) →</a></div>
               <button class="btn btn-primary btn-sm" onclick="openBooking()">Book Appointment</button>
             </div>
 
@@ -1711,7 +1713,7 @@
             Get clear, evidence-based guidance on fertility, ovulation, and treatment options, without judgment
             and without pressure.</p>
           <a href="https://whatsapp.com/channel/REPLACE_WITH_REAL_CHANNEL_ID" target="_blank" rel="noopener noreferrer"
-            class="btn fc-btn-gold btn-lg">Join the Free Fertility Community
+            id="fcJoinCTA" class="btn fc-btn-gold btn-lg">Join the Free Fertility Community
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"
               aria-hidden="true">
               <path d="M5 12h14M12 5l7 7-7 7" />
@@ -1730,6 +1732,55 @@
               message you directly.</p>
           </div>
           <p class="fc-trust-line">Free to join · Learn at your own pace · Leave anytime</p>
+        </div>
+      </div>
+
+      <!-- GATEWAY — "Where are you in your journey?" (5 pathways, all route to the
+           Join CTA above for now — individual cluster content is a future,
+           post-CMS milestone, see roadmap) -->
+      <div class="bg-ivory">
+        <div class="section-pad">
+          <div class="section-header centered">
+            <span class="eyebrow">Start Here</span>
+            <h2 class="section-title">Where Are You in Your Fertility Journey?</h2>
+            <p class="section-sub">Wherever you're starting from, there's a path forward — explore, then join the
+              community for ongoing guidance.</p>
+          </div>
+          <div class="fc-gateway-grid">
+            <a href="javascript:void(0)" onclick="openFertilityQuestionnaire()" class="fc-gateway-card">
+              <span class="fc-gateway-icon" aria-hidden="true">🌱</span>
+              <h4>Planning Pregnancy</h4>
+              <p>I want to prepare before trying.</p>
+            </a>
+            <a href="javascript:void(0)" onclick="openFertilityQuestionnaire()" class="fc-gateway-card">
+              <span class="fc-gateway-icon" aria-hidden="true">💚</span>
+              <h4>Trying to Conceive</h4>
+              <p>We've started trying and want guidance.</p>
+            </a>
+            <a href="javascript:void(0)" onclick="openFertilityQuestionnaire()" class="fc-gateway-card">
+              <span class="fc-gateway-icon" aria-hidden="true">🔎</span>
+              <h4>Having Difficulty</h4>
+              <p>We've been trying and are concerned.</p>
+            </a>
+            <a href="javascript:void(0)" onclick="openFertilityQuestionnaire()" class="fc-gateway-card">
+              <span class="fc-gateway-icon" aria-hidden="true">👨</span>
+              <h4>Male Fertility</h4>
+              <p>Semen analysis, sperm health, male-factor concerns.</p>
+            </a>
+            <a href="javascript:void(0)" onclick="openFertilityQuestionnaire()" class="fc-gateway-card">
+              <span class="fc-gateway-icon" aria-hidden="true">👩</span>
+              <h4>Female Fertility</h4>
+              <p>Ovulation, PCOS, endometriosis, ovarian reserve.</p>
+            </a>
+          </div>
+          <div style="text-align:center;margin-top:28px;">
+            <button class="btn btn-primary" onclick="openFertilityQuestionnaire()">📋 Take the Fertility Readiness Check</button>
+          </div>
+          <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--ink-light);">
+            Prefer to start on your own? <a href="files/couple-fertility-checklist.pdf" target="_blank"
+              rel="noopener noreferrer" style="color:var(--teal);font-weight:600;">Download the printable Couple
+              Fertility Checklist (PDF) →</a>
+          </p>
         </div>
       </div>
 
@@ -2168,7 +2219,16 @@
               <li>You may leave the community at any time by leaving the WhatsApp channel directly.</li>
             </ul>
 
-            <h3 style="margin-top:24px;">5. Children's Data and Parental Consent</h3>
+            <h3 style="margin-top:24px;">5. Fertility Readiness Questionnaire — How Your Responses Are Handled</h3>
+            <p>If you complete the online Fertility Readiness Questionnaire, your responses (self-assessment
+              answers, and optionally partner ages and how long you've been trying) are used only to generate your
+              personalised summary. If you explicitly opt in to being contacted, we also collect your name, phone
+              number, and/or email for that purpose only. If the phone number you provide matches an existing
+              patient record, your questionnaire responses may be associated with that record for continuity of
+              care. Your responses are never used to generate a diagnosis, and completing the questionnaire does
+              not create a doctor-patient relationship.</p>
+
+            <h3 style="margin-top:24px;">6. Children's Data and Parental Consent</h3>
             <p>In accordance with the DPDP Act's protections for children (individuals under 18 years of age), we
               do not knowingly process personal data of, or accept appointment bookings for, anyone under 18
               without the <strong>verifiable consent of a parent or lawful guardian</strong>. If you are booking an
@@ -2176,15 +2236,15 @@
               consent to this processing on their behalf. If we become aware that we have collected data from a
               minor without appropriate parental/guardian consent, we will take steps to delete such data promptly.</p>
 
-            <h3 style="margin-top:24px;">6. Data Sharing and Third-Party Processors</h3>
+            <h3 style="margin-top:24px;">7. Data Sharing and Third-Party Processors</h3>
             <p>Beyond Google Analytics (see Section 3), we do not sell, rent, or otherwise share your personal data
               with third parties for their own marketing purposes.</p>
 
-            <h3 style="margin-top:24px;">7. Data Retention Period</h3>
+            <h3 style="margin-top:24px;">8. Data Retention Period</h3>
             <p>We retain your digital data only as long as necessary to fulfil the purposes described above, or to
               comply with applicable medical record retention regulations under Indian healthcare law.</p>
 
-            <h3 style="margin-top:24px;">8. Your Rights as a Data Principal</h3>
+            <h3 style="margin-top:24px;">9. Your Rights as a Data Principal</h3>
             <p>Under the DPDP Act, you have the following rights, exercisable at any point:</p>
             <ul style="margin-left:20px;margin-bottom:16px;line-height:2;">
               <li><strong>Right to Access:</strong> Obtain a summary of the personal data we process about you.</li>
@@ -2199,7 +2259,7 @@
                 behalf in the event of your death or incapacity.</li>
             </ul>
 
-            <h3 style="margin-top:24px;">9. Your Duties as a Data Principal</h3>
+            <h3 style="margin-top:24px;">10. Your Duties as a Data Principal</h3>
             <p>Under <strong>Section 15 of the DPDP Act, 2023</strong>, as a Data Principal you also have certain
               duties, including to:</p>
             <ul style="margin-left:20px;margin-bottom:16px;line-height:2;">
@@ -2212,7 +2272,7 @@
                 or erasure.</li>
             </ul>
 
-            <h3 style="margin-top:24px;">10. Grievance Officer / Contact</h3>
+            <h3 style="margin-top:24px;">11. Grievance Officer / Contact</h3>
             <p>To exercise your rights, raise a grievance, or ask questions about this policy, please contact our
               <strong>Grievance Officer</strong>:
             </p>
@@ -2222,12 +2282,12 @@
                 style="color:var(--teal);font-weight:600;">drpujasclinic@gmail.com</a><br>
               Address: A 128, Gali No 8, Madhu Vihar, IP Extension, Patparganj, New Delhi — 110092</p>
 
-            <h3 style="margin-top:24px;">11. Escalation to the Data Protection Board of India</h3>
+            <h3 style="margin-top:24px;">12. Escalation to the Data Protection Board of India</h3>
             <p>If you are not satisfied with how we have addressed your grievance under Section 10 above, you have
               the right to escalate your complaint to the <strong>Data Protection Board of India</strong>, the
               statutory authority established under the DPDP Act, 2023, for resolving unaddressed grievances.</p>
             <p>We aim to acknowledge grievances within 3 business days</p>
-            <h3 style="margin-top:24px;">12. Availability in Other Languages</h3>
+            <h3 style="margin-top:24px;">13. Availability in Other Languages</h3>
             <p>This Privacy Notice is available in English. A version in other scheduled Indian languages specified
               in the Eighth Schedule to the Constitution of India can be made available upon request — please
               contact our Grievance Officer (Section 10).</p>
@@ -2492,6 +2552,7 @@
   <script src="js/booking.js" defer></script>
   <!-- booking-widget.js — screenshot-matching booking UI, depends on booking.js -->
   <script src="js/booking-widget.js" defer></script>
+  <script src="js/fertility-questionnaire.js" defer></script>
   <script src="js/manage-booking.js" defer></script>
   <!-- chat.js — AI assistant -->
   <script src="js/chat.js" defer></script>
