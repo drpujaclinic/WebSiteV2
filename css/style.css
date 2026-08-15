@@ -3149,6 +3149,55 @@ textarea {
 .fc-hero-sub { font-size: var(--text-md); color: var(--ink-light); line-height: 1.7; margin-bottom: var(--space-8); }
 .fc-trust-line { font-size: var(--text-sm); color: var(--ink-light); margin-top: var(--space-4); }
 
+/* Hero Join CTA — was stretching too wide; natural content width on desktop,
+   comfortable near-full-width only on small mobile. */
+.fc-btn-hero-cta {
+  width: auto;
+  max-width: 100%;
+}
+@media (max-width: 480px) {
+  .fc-btn-hero-cta {
+    display: block;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* Mixed-typography section headings: sans-serif base (matches body font,
+   dark ink) + italic serif accent (matches --font-display, teal) — reuses
+   the exact base+em pattern already established in .hero-h1/.fc-hero-title
+   rather than inventing a new type treatment. Scoped to these 4 headings
+   only via .fc-mixed-heading, not applied to .section-title sitewide. */
+.fc-mixed-heading {
+  font-family: var(--font-body);
+  color: var(--ink);
+  text-align: center;
+}
+.heading-accent {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--teal);
+}
+@media (max-width: 480px) {
+  .fc-mixed-heading { font-size: 26px; line-height: 1.25; }
+}
+
+/* ── PRINT — results summary only (Print/Save as PDF uses the browser's
+   native print, no backend or client-side PDF library involved) ────────── */
+@media print {
+  body * { visibility: hidden; }
+  .fq-print-area, .fq-print-area * { visibility: visible; }
+  .fq-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  .fq-no-print { display: none !important; }
+}
+
 /* Privacy assurance bullet — deliberately its own line, directly under the
    CTA, so it's read as reassurance immediately after the ask, not buried. */
 .fc-privacy-bullet {
@@ -3265,7 +3314,10 @@ textarea {
 
 /* ── FERTILITY QUESTIONNAIRE (reuses .bw-sheet/.bw-overlay/.bw-form-* from booking-widget.css) ── */
 .fq-body {
-  padding: 4px var(--bw-pad, 20px) 20px;
+  padding: 4px 24px 20px;
+}
+@media (max-width: 768px) {
+  .fq-body { padding: 4px 16px 16px; }
 }
 .fq-intro {
   font-size: 13px;
@@ -3273,6 +3325,61 @@ textarea {
   line-height: 1.6;
   margin-bottom: 20px;
 }
+
+/* ── WIZARD: progress + step controls ─────────────────────────────────── */
+.fq-progress-wrap {
+  padding: 0 24px 14px;
+}
+@media (max-width: 768px) { .fq-progress-wrap { padding: 0 16px 14px; } }
+.fq-progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-light);
+  margin-bottom: 6px;
+}
+.fq-progress-track {
+  height: 5px;
+  background: var(--ivory-dark);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+.fq-progress-fill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: var(--r-full);
+  transition: width var(--dur) var(--ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fq-progress-fill { transition: none; }
+}
+.fq-step-body {
+  max-height: 56vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.fq-step-nav {
+  display: flex;
+  gap: 10px;
+  padding-top: 16px;
+  margin-top: 4px;
+  border-top: 1px solid var(--ivory-dark);
+}
+.fq-step-nav .bw-primary-btn,
+.fq-step-nav .bw-done-btn {
+  margin: 0;
+  flex: 1;
+}
+.fq-field-error {
+  font-size: 11.5px;
+  color: var(--error);
+  margin-top: -4px;
+  margin-bottom: 10px;
+  min-height: 14px;
+}
+.fq-input-error {
+  border-color: var(--error) !important;
+}
+
 .fq-section {
   margin-bottom: 28px;
   padding-bottom: 20px;
@@ -3310,15 +3417,32 @@ textarea {
   accent-color: var(--teal);
   cursor: pointer;
 }
+/* Red flags get a visually distinct warning treatment — amber, not teal —
+   so they read as a different KIND of input than lifestyle checkboxes,
+   without escalating to alarming red or implying a diagnosis. */
 .fq-redflags {
-  background: var(--teal-ghost);
+  background: var(--gold-pale);
+  border: 1px solid rgba(184, 146, 42, 0.25);
   border-radius: var(--r-md);
   padding: 16px 16px 8px;
   border-bottom: none;
 }
+.fq-redflags h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8a6a1f;
+}
+.fq-redflags h4::before {
+  content: '⚠';
+  font-size: 13px;
+}
+.fq-redflags .fq-check-row input[type="checkbox"] {
+  accent-color: var(--gold);
+}
 .fq-redflags-note {
   font-size: 12px;
-  color: var(--ink-light);
+  color: #8a6a1f;
   margin-bottom: 8px;
 }
 .fq-demo-row {

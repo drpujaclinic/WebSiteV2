@@ -1,82 +1,83 @@
 /**
- * DR. PUJA'S CLINIC — fertility-questionnaire.js
+ * DR. PUJA'S CLINIC — fertility-questionnaire.js (v2 — 4-step wizard)
  * Online version of the Couple Fertility Checklist. Self-check only — no
  * score, no diagnosis. Server computes per-section status + lifestyle tips;
- * this file only renders what the server returns.
+ * this file only renders what the server returns, plus a client-side
+ * aggregate rollup of that same data (not a new scoring system).
  * Depends on: booking.js (bwApi, escapeHTML)
  */
 'use strict';
 
 // Keys/order must match backend $SECTIONS exactly.
-const FQ_SECTIONS = [
-  { key: 'reproductive_awareness', label: 'Reproductive Health Awareness', items: [
+const FQ_SECTIONS = {
+  reproductive_awareness: { label: 'Reproductive Health Awareness', items: [
     ['r1', "We know the female partner's usual cycle length and pattern."],
     ['r2', 'We can identify approximately when ovulation may occur.'],
     ['r3', 'We understand that the fertile window is limited.'],
     ['r4', 'We know when to seek fertility evaluation rather than delaying indefinitely.'],
     ['r5', 'We have discussed our reproductive goals and preferred timeline.'],
   ]},
-  { key: 'preconception_health', label: 'Preconception Health', items: [
+  preconception_health: { label: 'Preconception Health', items: [
     ['p1', 'We have reviewed important medical conditions with a clinician.'],
     ['p2', 'Regular medications and supplements have been reviewed for pregnancy planning.'],
     ['p3', 'Recommended vaccinations/preconception care have been considered.'],
     ['p4', 'Folic acid supplementation has been discussed for the person who may become pregnant.'],
     ['p5', 'Dental and general health concerns are being addressed where appropriate.'],
   ]},
-  { key: 'nutrition', label: 'Nutrition', items: [
+  nutrition: { label: 'Nutrition', items: [
     ['n1', 'Most meals contain vegetables/fruits and minimally processed foods.'],
     ['n2', 'We include adequate protein from suitable sources.'],
     ['n3', 'We regularly include whole grains, pulses/legumes, nuts or seeds as appropriate.'],
     ['n4', 'We limit frequent ultra-processed foods and sugary drinks.'],
     ['n5', "We avoid unregulated 'fertility boosters' or supplements without medical advice."],
   ]},
-  { key: 'weight_metabolic', label: 'Weight & Metabolic Health', items: [
+  weight_metabolic: { label: 'Weight & Metabolic Health', items: [
     ['w1', 'We know whether our current weight is appropriate for our health goals.'],
     ['w2', 'We are working toward a healthy, sustainable weight if advised.'],
     ['w3', 'Diabetes, thyroid disease or other relevant metabolic issues are appropriately managed.'],
     ['w4', 'We are avoiding crash diets and extreme weight-loss programs.'],
   ]},
-  { key: 'movement_fitness', label: 'Movement & Fitness', items: [
+  movement_fitness: { label: 'Movement & Fitness', items: [
     ['m1', 'We are physically active on most days of the week.'],
     ['m2', 'We include appropriate aerobic activity and/or strength work.'],
     ['m3', 'We break up long periods of sitting.'],
     ['m4', 'Our exercise plan is realistic and sustainable.'],
   ]},
-  { key: 'sleep_recovery', label: 'Sleep & Recovery', items: [
+  sleep_recovery: { label: 'Sleep & Recovery', items: [
     ['s1', 'We usually get adequate sleep.'],
     ['s2', 'Our sleep/wake timing is reasonably consistent.'],
     ['s3', 'We address persistent snoring, severe daytime sleepiness or other sleep concerns with a clinician.'],
     ['s4', "We protect some time for recovery rather than constantly operating in 'work mode'."],
   ]},
-  { key: 'stress_relationship', label: 'Stress & Relationship', items: [
+  stress_relationship: { label: 'Stress & Relationship', items: [
     ['st1', 'We have a healthy way to manage daily stress.'],
     ['st2', 'We make time for connection as a couple outside fertility planning.'],
     ['st3', 'We avoid blaming each other for difficulty conceiving.'],
     ['st4', 'Trying to conceive has not become the only focus of our relationship.'],
     ['st5', 'We know where to seek emotional support if the process becomes overwhelming.'],
   ]},
-  { key: 'exposures', label: 'Tobacco, Alcohol & Other Exposures', items: [
+  exposures: { label: 'Tobacco, Alcohol & Other Exposures', items: [
     ['e1', 'Neither partner uses tobacco/nicotine, or a cessation plan is underway.'],
     ['e2', 'Alcohol intake is minimized/avoided appropriately while planning pregnancy.'],
     ['e3', 'Recreational drugs are avoided.'],
     ['e4', 'Occupational/environmental exposures relevant to reproductive health have been reviewed when applicable.'],
     ['e5', 'We discuss significant medication or supplement exposures with a clinician.'],
   ]},
-  { key: 'male_fertility', label: 'Male Fertility Check', items: [
+  male_fertility: { label: 'Male Fertility Check', items: [
     ['mf1', 'We understand that male factors can contribute to infertility.'],
     ['mf2', 'Tobacco/nicotine exposure has been addressed.'],
     ['mf3', 'Weight, exercise, sleep and metabolic health are being optimized.'],
     ['mf4', 'Relevant medications, heat/occupational exposures or prior reproductive problems have been reviewed if applicable.'],
     ['mf5', 'Semen analysis is considered when clinically indicated rather than assuming the issue is female.'],
   ]},
-  { key: 'female_fertility', label: 'Female Fertility Check', items: [
+  female_fertility: { label: 'Female Fertility Check', items: [
     ['ff1', 'Menstrual cycles are tracked for pattern and regularity.'],
     ['ff2', 'Irregular/absent periods have been discussed with a clinician.'],
     ['ff3', 'Severe period pain or symptoms suggestive of endometriosis have been discussed.'],
     ['ff4', 'Previous pelvic infection, surgery or known tubal problems have been considered.'],
     ['ff5', 'Age and reproductive timeline have been considered in planning.'],
   ]},
-];
+};
 
 const FQ_RED_FLAGS = [
   ['rf1', 'Female partner has irregular or absent periods.'],
@@ -90,9 +91,22 @@ const FQ_RED_FLAGS = [
   ['rf9', 'You have been trying for an appropriate period without pregnancy and want professional guidance.'],
 ];
 
+// 4-step grouping — content only, no scoring/meaning change.
+const FQ_STEPS = [
+  { title: 'Awareness & Health', sections: ['reproductive_awareness', 'preconception_health', 'nutrition'] },
+  { title: 'Lifestyle & Wellbeing', sections: ['weight_metabolic', 'movement_fitness', 'sleep_recovery', 'stress_relationship'] },
+  { title: 'Fertility Factors', sections: ['exposures', 'male_fertility', 'female_fertility'], includeRedFlags: true },
+  { title: 'About You', isFinal: true },
+];
+
 const fqState = {
   screen: 'form', // 'form' | 'success'
+  currentStep: 0,
+  responses: {},       // persisted checkbox state across steps, keyed by item key
+  demographics: { age1: '', age2: '', trying: '' },
   contactOptIn: false,
+  contact: { name: '', phone: '', email: '' },
+  fieldErrors: {},
   submitting: false,
   error: '',
   result: null,
@@ -101,7 +115,11 @@ const fqState = {
 function openFertilityQuestionnaire() {
   const overlay = document.getElementById('fqOverlay');
   if (!overlay) return;
-  Object.assign(fqState, { screen: 'form', contactOptIn: false, submitting: false, error: '', result: null });
+  Object.assign(fqState, {
+    screen: 'form', currentStep: 0, responses: {}, demographics: { age1: '', age2: '', trying: '' },
+    contactOptIn: false, contact: { name: '', phone: '', email: '' }, fieldErrors: {},
+    submitting: false, error: '', result: null,
+  });
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
   renderFqWidget();
@@ -124,10 +142,76 @@ function closeFqOutside(e) {
   if (e.target === document.getElementById('fqOverlay')) closeFertilityQuestionnaire();
 }
 
+// ── Persist current step's inputs into fqState before navigating away ─────
+function fqHarvestCurrentStep() {
+  const step = FQ_STEPS[fqState.currentStep];
+  if (!step) return;
+  if (step.isFinal) {
+    fqState.demographics.age1 = document.getElementById('fqAge1')?.value || '';
+    fqState.demographics.age2 = document.getElementById('fqAge2')?.value || '';
+    fqState.demographics.trying = document.getElementById('fqTrying')?.value || '';
+    fqState.contactOptIn = document.getElementById('fqContactOptIn')?.checked || false;
+    fqState.contact.name = document.getElementById('fqName')?.value.trim() || '';
+    fqState.contact.phone = document.getElementById('fqPhone')?.value.trim() || '';
+    fqState.contact.email = document.getElementById('fqEmail')?.value.trim() || '';
+    return;
+  }
+  (step.sections || []).forEach(secKey => {
+    FQ_SECTIONS[secKey].items.forEach(([key]) => {
+      const el = document.getElementById(`fq_${key}`);
+      if (el) fqState.responses[key] = el.checked;
+    });
+  });
+  if (step.includeRedFlags) {
+    FQ_RED_FLAGS.forEach(([key]) => {
+      const el = document.getElementById(`fq_${key}`);
+      if (el) fqState.responses[key] = el.checked;
+    });
+  }
+}
+
+function fqGoStep(delta) {
+  fqHarvestCurrentStep();
+  if (delta > 0) {
+    const valid = fqValidateFinalStepIfNeeded();
+    if (!valid) { renderFqWidget(); return; }
+  }
+  const next = fqState.currentStep + delta;
+  if (next < 0 || next >= FQ_STEPS.length) return;
+  fqState.currentStep = next;
+  renderFqWidget();
+  document.getElementById('fqStepBody')?.scrollTo({ top: 0 });
+}
+
+// Only the final step has genuine required-field validation (contact details,
+// only when the person opted in). Steps 1-3 are a self-check — an unchecked
+// box is legitimate data, not an incomplete answer, so nothing blocks
+// progression there.
+function fqValidateFinalStepIfNeeded() {
+  const step = FQ_STEPS[fqState.currentStep];
+  if (!step || !step.isFinal) return true;
+  fqState.fieldErrors = {};
+  if (!fqState.contactOptIn) return true;
+
+  let ok = true;
+  if (!fqState.contact.name) { fqState.fieldErrors.name = 'Please enter your name.'; ok = false; }
+  if (!fqState.contact.phone) {
+    fqState.fieldErrors.phone = 'Please enter a mobile number.'; ok = false;
+  } else if (!/^[6-9]\d{9}$/.test(fqState.contact.phone)) {
+    fqState.fieldErrors.phone = 'Enter a valid 10-digit Indian mobile number.'; ok = false;
+  }
+  if (!fqState.contact.email) {
+    fqState.fieldErrors.email = 'Please enter an email address.'; ok = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fqState.contact.email)) {
+    fqState.fieldErrors.email = 'Enter a valid email address.'; ok = false;
+  }
+  return ok;
+}
+
 function fqToggleContact() {
-  fqState.contactOptIn = document.getElementById('fqContactOptIn')?.checked || false;
   const box = document.getElementById('fqContactFields');
-  if (box) box.style.display = fqState.contactOptIn ? 'block' : 'none';
+  const checked = document.getElementById('fqContactOptIn')?.checked || false;
+  if (box) box.style.display = checked ? 'block' : 'none';
 }
 
 function renderFqWidget() {
@@ -136,83 +220,128 @@ function renderFqWidget() {
   body.innerHTML = fqState.screen === 'success' ? renderFqSuccess() : renderFqForm();
 }
 
-function fqSectionHTML(section) {
+function fqSectionHTML(secKey) {
+  const section = FQ_SECTIONS[secKey];
   return `
     <div class="fq-section">
       <h4>${escapeHTML(section.label)}</h4>
       ${section.items.map(([key, text]) => `
         <label class="fq-check-row">
-          <input type="checkbox" name="${key}" id="fq_${key}">
+          <input type="checkbox" id="fq_${key}" ${fqState.responses[key] ? 'checked' : ''}>
           <span>${escapeHTML(text)}</span>
         </label>
       `).join('')}
     </div>`;
 }
 
-function renderFqForm() {
+function fqRedFlagsHTML() {
   return `
-    <p class="fq-intro">Complete this together \u2014 there's no score and no diagnosis. It takes about 5 minutes and
-      helps you see, at a glance, where things already look solid and where you might want to focus.</p>
-
-    ${FQ_SECTIONS.map(fqSectionHTML).join('')}
-
     <div class="fq-section fq-redflags">
       <h4>When Should We Seek Help?</h4>
       <p class="fq-redflags-note">Lifestyle improvement should complement \u2014 not replace \u2014 appropriate fertility
-        evaluation. Check anything that applies to you.</p>
+        evaluation. Check anything that applies to you \u2014 this isn't a diagnosis, just a signal worth acting on.</p>
       ${FQ_RED_FLAGS.map(([key, text]) => `
         <label class="fq-check-row">
-          <input type="checkbox" name="${key}" id="fq_${key}">
+          <input type="checkbox" id="fq_${key}" ${fqState.responses[key] ? 'checked' : ''}>
           <span>${escapeHTML(text)}</span>
         </label>
       `).join('')}
-    </div>
+    </div>`;
+}
 
-    <div class="fq-section">
-      <h4>A Little About You <span class="fq-optional">(optional)</span></h4>
-      <div class="fq-demo-row">
-        <div class="bw-form-group" style="flex:1;">
-          <label class="bw-form-label" for="fqAge1">Partner 1 Age</label>
-          <input type="number" id="fqAge1" class="bw-form-input" min="16" max="60">
+function renderFqProgress() {
+  const stepNum = fqState.currentStep + 1;
+  const total = FQ_STEPS.length;
+  const pct = Math.round((stepNum / total) * 100);
+  return `
+    <div class="fq-progress-wrap">
+      <div class="fq-progress-label">Step ${stepNum} of ${total} \u2014 ${escapeHTML(FQ_STEPS[fqState.currentStep].title)}</div>
+      <div class="fq-progress-track" role="progressbar" aria-valuenow="${stepNum}" aria-valuemin="1" aria-valuemax="${total}"
+           aria-label="Step ${stepNum} of ${total}: ${escapeHTML(FQ_STEPS[fqState.currentStep].title)}">
+        <div class="fq-progress-fill" style="width:${pct}%;"></div>
+      </div>
+    </div>`;
+}
+
+function renderFqStepContent() {
+  const step = FQ_STEPS[fqState.currentStep];
+  if (step.isFinal) {
+    const fe = fqState.fieldErrors;
+    return `
+      <p class="fq-intro">Almost done \u2014 this last part is optional.</p>
+      <div class="fq-section">
+        <h4>A Little About You <span class="fq-optional">(optional)</span></h4>
+        <div class="fq-demo-row">
+          <div class="bw-form-group" style="flex:1;">
+            <label class="bw-form-label" for="fqAge1">Partner 1 Age</label>
+            <input type="number" id="fqAge1" class="bw-form-input" min="16" max="60" value="${escapeHTML(fqState.demographics.age1)}">
+          </div>
+          <div class="bw-form-group" style="flex:1;">
+            <label class="bw-form-label" for="fqAge2">Partner 2 Age</label>
+            <input type="number" id="fqAge2" class="bw-form-input" min="16" max="60" value="${escapeHTML(fqState.demographics.age2)}">
+          </div>
         </div>
-        <div class="bw-form-group" style="flex:1;">
-          <label class="bw-form-label" for="fqAge2">Partner 2 Age</label>
-          <input type="number" id="fqAge2" class="bw-form-input" min="16" max="60">
+        <div class="bw-form-group">
+          <label class="bw-form-label" for="fqTrying">Trying for (months)</label>
+          <input type="number" id="fqTrying" class="bw-form-input" min="0" max="240" value="${escapeHTML(fqState.demographics.trying)}">
         </div>
       </div>
-      <div class="bw-form-group">
-        <label class="bw-form-label" for="fqTrying">Trying for (months)</label>
-        <input type="number" id="fqTrying" class="bw-form-input" min="0" max="240">
-      </div>
-    </div>
 
-    <div class="fq-section">
-      <label class="fq-check-row fq-contact-toggle">
-        <input type="checkbox" id="fqContactOptIn" onchange="fqToggleContact()">
-        <span><strong>We're comfortable being contacted</strong> by Dr. Puja's Clinic about our results.</span>
-      </label>
-      <div id="fqContactFields" style="display:none;">
-        <div class="bw-form-group">
-          <label class="bw-form-label" for="fqName">Name</label>
-          <input type="text" id="fqName" class="bw-form-input">
+      <div class="fq-section" style="border-bottom:none;">
+        <label class="fq-check-row fq-contact-toggle">
+          <input type="checkbox" id="fqContactOptIn" onchange="fqToggleContact()" ${fqState.contactOptIn ? 'checked' : ''}>
+          <span><strong>We're comfortable being contacted</strong> by Dr. Puja's Clinic about our results.</span>
+        </label>
+        <div id="fqContactFields" style="display:${fqState.contactOptIn ? 'block' : 'none'};">
+          <div class="bw-form-group">
+            <label class="bw-form-label" for="fqName">Full Name *</label>
+            <input type="text" id="fqName" class="bw-form-input ${fe.name ? 'fq-input-error' : ''}" value="${escapeHTML(fqState.contact.name)}" aria-required="true">
+            <div class="fq-field-error" role="alert">${escapeHTML(fe.name || '')}</div>
+          </div>
+          <div class="bw-form-group">
+            <label class="bw-form-label" for="fqPhone">Phone Number / WhatsApp *</label>
+            <input type="tel" id="fqPhone" class="bw-form-input ${fe.phone ? 'fq-input-error' : ''}" maxlength="10" inputmode="numeric"
+                   placeholder="10-digit mobile number" value="${escapeHTML(fqState.contact.phone)}" aria-required="true">
+            <div class="fq-field-error" role="alert">${escapeHTML(fe.phone || '')}</div>
+          </div>
+          <div class="bw-form-group">
+            <label class="bw-form-label" for="fqEmail">Email Address *</label>
+            <input type="email" id="fqEmail" class="bw-form-input ${fe.email ? 'fq-input-error' : ''}" value="${escapeHTML(fqState.contact.email)}" aria-required="true">
+            <div class="fq-field-error" role="alert">${escapeHTML(fe.email || '')}</div>
+          </div>
+          <p class="fq-privacy-note">Your responses are used only to give you this summary and, if you've opted in above,
+            for the clinic to follow up. See our <a href="#privacy" onclick="closeFertilityQuestionnaire();showPage('privacy');return false;">Privacy Policy</a>.</p>
         </div>
-        <div class="bw-form-group">
-          <label class="bw-form-label" for="fqPhone">Mobile Number</label>
-          <input type="tel" id="fqPhone" class="bw-form-input" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number">
-        </div>
-        <div class="bw-form-group">
-          <label class="bw-form-label" for="fqEmail">Email</label>
-          <input type="email" id="fqEmail" class="bw-form-input">
-        </div>
-        <p class="fq-privacy-note">Your responses are used only to give you this summary and, if you've opted in above,
-          for the clinic to follow up. See our <a href="#privacy" onclick="closeFertilityQuestionnaire();showPage('privacy');return false;">Privacy Policy</a>.</p>
       </div>
-    </div>
+    `;
+  }
+  const sections = (step.sections || []).map(fqSectionHTML).join('');
+  const redFlags = step.includeRedFlags ? fqRedFlagsHTML() : '';
+  return sections + redFlags;
+}
 
-    <div class="fq-error" id="fqError" role="alert" aria-live="polite">${escapeHTML(fqState.error)}</div>
-    <button class="bw-primary-btn" id="fqSubmitBtn" onclick="submitFertilityQuestionnaire()" ${fqState.submitting ? 'disabled' : ''}>
-      ${fqState.submitting ? 'Submitting\u2026' : 'See My Summary'}
-    </button>
+function renderFqForm() {
+  const step = FQ_STEPS[fqState.currentStep];
+  const isFirst = fqState.currentStep === 0;
+  const isLast = fqState.currentStep === FQ_STEPS.length - 1;
+
+  return `
+    ${renderFqProgress()}
+    <div class="fq-step-body" id="fqStepBody">
+      ${fqState.currentStep === 0 ? `<p class="fq-intro">Complete this together \u2014 there's no score and no diagnosis.
+        It takes about 5 minutes and helps you see, at a glance, where things already look solid and where you might
+        want to focus.</p>` : ''}
+      ${renderFqStepContent()}
+      <div class="fq-error" role="alert" aria-live="polite">${escapeHTML(fqState.error)}</div>
+    </div>
+    <div class="fq-step-nav">
+      ${!isFirst ? `<button class="bw-done-btn" onclick="fqGoStep(-1)">\u2190 Back</button>` : ''}
+      ${!isLast
+        ? `<button class="bw-primary-btn" onclick="fqGoStep(1)">Next \u2192</button>`
+        : `<button class="bw-primary-btn" id="fqSubmitBtn" onclick="submitFertilityQuestionnaire()" ${fqState.submitting ? 'disabled' : ''}>
+             ${fqState.submitting ? 'Submitting\u2026' : 'View Summary / Submit'}
+           </button>`}
+    </div>
   `;
 }
 
@@ -222,18 +351,32 @@ function fqStatusLabel(status) {
   return { text: 'Consider Focusing Here', cls: 'fq-status-focus' };
 }
 
+// Aggregate rollup of the server's own per-section statuses — not a new
+// scoring system, just a plain-language summary of data already computed.
+function fqOverallHeadline(sections) {
+  const counts = { strong: 0, attention: 0, focus: 0 };
+  sections.forEach(s => counts[s.status]++);
+  if (counts.focus === 0 && counts.attention === 0) return 'Looking Strong Overall';
+  if (counts.focus > 0) return 'A Few Areas Worth Focusing On';
+  return 'Good Foundation, With Room to Build';
+}
+
 function renderFqSuccess() {
   const r = fqState.result;
   if (!r) return '<p class="fq-intro">Something went wrong showing your summary \u2014 please check your email or contact the clinic.</p>';
+
+  const strong = r.section_summary.filter(s => s.status === 'strong');
+  const needsWork = r.section_summary.filter(s => s.status !== 'strong');
+  const overall = fqOverallHeadline(r.section_summary);
 
   const redFlagBanner = r.needs_follow_up ? `
     <div class="fq-followup-banner">
       <strong>Based on a few of your answers, we'd recommend booking a consultation sooner rather than later.</strong>
       <p>This isn't a diagnosis \u2014 just a signal that it's worth having a clinician take a look now, rather than waiting.</p>
-      <button class="btn btn-primary btn-sm" onclick="closeFertilityQuestionnaire();openBooking();">Book a Consultation</button>
+      <button class="btn btn-primary btn-sm fq-no-print" onclick="closeFertilityQuestionnaire();openBooking();">Book a Consultation</button>
     </div>` : '';
 
-  const sections = r.section_summary.map(s => {
+  const rowHTML = s => {
     const st = fqStatusLabel(s.status);
     return `
       <div class="fq-result-row">
@@ -243,37 +386,37 @@ function renderFqSuccess() {
         </div>
         <p>${escapeHTML(s.tip)}</p>
       </div>`;
-  }).join('');
+  };
 
   return `
-    <div class="fq-success-wrap">
-      <div class="fq-success-tick" aria-hidden="true">\u2705</div>
+    <div class="fq-success-wrap fq-print-area">
+      <div class="fq-success-tick fq-no-print" aria-hidden="true">\u2705</div>
       <h3>Thank You \u2014 Here's Your Summary</h3>
       <p class="fq-intro">This is a self-check, not a test result. Use it as a starting point for your own conversation
         \u2014 and with Dr. Puja, whenever you're ready.</p>
+
+      <div class="fq-result-row" style="background:var(--teal-ghost);border-color:transparent;">
+        <div class="fq-result-head"><span style="font-size:15px;">${escapeHTML(overall)}</span></div>
+        <p>${strong.length} of ${r.section_summary.length} areas already look strong${needsWork.length ? `, and ${needsWork.length} are worth a closer look` : ''}.</p>
+      </div>
+
       ${redFlagBanner}
-      ${sections}
-      <button class="bw-done-btn" style="width:100%;margin-top:16px;" onclick="closeFertilityQuestionnaire()">Done</button>
+
+      ${needsWork.length ? `<h4 style="font-size:13px;margin:18px 0 8px;color:var(--ink);">Areas Needing Attention</h4>${needsWork.map(rowHTML).join('')}` : ''}
+      ${strong.length ? `<h4 style="font-size:13px;margin:18px 0 8px;color:var(--ink);">Key Positive Areas</h4>${strong.map(rowHTML).join('')}` : ''}
+
+      <div class="fq-no-print" style="display:flex;gap:10px;margin-top:16px;">
+        <button class="bw-done-btn" style="flex:1;" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        <button class="bw-primary-btn" style="flex:1;margin:0;" onclick="closeFertilityQuestionnaire();openBooking();">Book Appointment</button>
+      </div>
+      <button class="bw-done-btn fq-no-print" style="width:100%;margin-top:10px;" onclick="closeFertilityQuestionnaire()">Done</button>
     </div>
   `;
 }
 
 async function submitFertilityQuestionnaire() {
-  const responses = {};
-  FQ_SECTIONS.forEach(sec => sec.items.forEach(([key]) => {
-    responses[key] = !!document.getElementById(`fq_${key}`)?.checked;
-  }));
-  FQ_RED_FLAGS.forEach(([key]) => {
-    responses[key] = !!document.getElementById(`fq_${key}`)?.checked;
-  });
-
-  const contactOptIn = document.getElementById('fqContactOptIn')?.checked || false;
-  const name = document.getElementById('fqName')?.value.trim() || '';
-  const phone = document.getElementById('fqPhone')?.value.trim() || '';
-  const email = document.getElementById('fqEmail')?.value.trim() || '';
-
-  if (contactOptIn && !phone && !email) {
-    fqState.error = 'Please provide a phone number or email so we can follow up.';
+  fqHarvestCurrentStep();
+  if (!fqValidateFinalStepIfNeeded()) {
     renderFqWidget();
     return;
   }
@@ -285,14 +428,14 @@ async function submitFertilityQuestionnaire() {
   const res = await bwApi('/submit-fertility-questionnaire.php', {
     method: 'POST',
     body: {
-      responses,
-      contact_opt_in: contactOptIn,
-      name: name || null,
-      phone: phone || null,
-      email: email || null,
-      partner1_age: document.getElementById('fqAge1')?.value || null,
-      partner2_age: document.getElementById('fqAge2')?.value || null,
-      trying_since_months: document.getElementById('fqTrying')?.value || null,
+      responses: fqState.responses,
+      contact_opt_in: fqState.contactOptIn,
+      name: fqState.contact.name || null,
+      phone: fqState.contact.phone || null,
+      email: fqState.contact.email || null,
+      partner1_age: fqState.demographics.age1 || null,
+      partner2_age: fqState.demographics.age2 || null,
+      trying_since_months: fqState.demographics.trying || null,
     },
   });
 
