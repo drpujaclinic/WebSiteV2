@@ -3314,10 +3314,7 @@ textarea {
 
 /* ── FERTILITY QUESTIONNAIRE (reuses .bw-sheet/.bw-overlay/.bw-form-* from booking-widget.css) ── */
 .fq-body {
-  padding: 4px 24px 20px;
-}
-@media (max-width: 768px) {
-  .fq-body { padding: 4px 16px 16px; }
+  padding: 4px 0 0;
 }
 .fq-intro {
   font-size: 13px;
@@ -3355,14 +3352,20 @@ textarea {
 .fq-step-body {
   max-height: 56vh;
   overflow-y: auto;
-  padding-right: 2px;
+  padding: 0 40px 0 24px; /* extra right padding absorbs the scrollbar so text doesn't hug it */
+}
+@media (max-width: 768px) {
+  .fq-step-body { padding: 0 32px 0 16px; }
 }
 .fq-step-nav {
   display: flex;
   gap: 10px;
-  padding-top: 16px;
+  padding: 16px 24px 20px;
   margin-top: 4px;
   border-top: 1px solid var(--ivory-dark);
+}
+@media (max-width: 768px) {
+  .fq-step-nav { padding: 16px 16px 16px; }
 }
 .fq-step-nav .bw-primary-btn,
 .fq-step-nav .bw-done-btn {
@@ -3476,6 +3479,10 @@ textarea {
 /* Results screen */
 .fq-success-wrap {
   text-align: center;
+  padding: 0 24px 20px;
+}
+@media (max-width: 768px) {
+  .fq-success-wrap { padding: 0 16px 16px; }
 }
 .fq-success-tick {
   font-size: 44px;

@@ -290,7 +290,8 @@ function renderFqStepContent() {
       <div class="fq-section" style="border-bottom:none;">
         <label class="fq-check-row fq-contact-toggle">
           <input type="checkbox" id="fqContactOptIn" onchange="fqToggleContact()" ${fqState.contactOptIn ? 'checked' : ''}>
-          <span><strong>We're comfortable being contacted</strong> by Dr. Puja's Clinic about our results.</span>
+          <span><strong>We're comfortable being contacted</strong> by Dr. Puja's Clinic about our results.
+            <em style="font-style:normal;color:var(--ink-faint);font-weight:400;">(Click checkbox to enter details.)</em></span>
         </label>
         <div id="fqContactFields" style="display:${fqState.contactOptIn ? 'block' : 'none'};">
           <div class="bw-form-group">
