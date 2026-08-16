@@ -3352,6 +3352,9 @@ textarea {
 /* ── FERTILITY QUESTIONNAIRE (reuses .bw-sheet/.bw-overlay/.bw-form-* from booking-widget.css) ── */
 .fq-body {
   padding: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* only .fq-step-body scrolls now — nav can never get clipped */
 }
 .fq-intro {
   font-size: 13px;
@@ -3362,6 +3365,7 @@ textarea {
 
 /* ── WIZARD: progress + step controls ─────────────────────────────────── */
 .fq-progress-wrap {
+  flex-shrink: 0;
   padding: 0 24px 14px;
 }
 @media (max-width: 768px) { .fq-progress-wrap { padding: 0 16px 14px; } }
@@ -3387,7 +3391,8 @@ textarea {
   .fq-progress-fill { transition: none; }
 }
 .fq-step-body {
-  max-height: 56vh;
+  flex: 1;
+  min-height: 0; /* required for a flex child to scroll properly instead of overflowing its column */
   overflow-y: auto;
   padding: 0 40px 0 24px; /* extra right padding absorbs the scrollbar so text doesn't hug it */
 }
@@ -3395,6 +3400,7 @@ textarea {
   .fq-step-body { padding: 0 32px 0 16px; }
 }
 .fq-step-nav {
+  flex-shrink: 0;
   display: flex;
   gap: 10px;
   padding: 16px 24px 20px;
@@ -3409,6 +3415,20 @@ textarea {
   margin: 0;
   flex: 1;
 }
+
+/* Scoped to this widget only — booking/manage-booking's .bw-sheet is
+   frozen/working, so overriding by #id rather than touching the shared
+   class. Sits higher than the default bottom-sheet position and caps
+   height a touch tighter so the step-nav footer is never flush against
+   the viewport edge on short mobile screens. */
+@media (max-width: 768px) {
+  #fqSheet {
+    margin-bottom: 32px;
+    max-height: 76vh;
+    max-height: 76dvh;
+  }
+}
+
 .fq-field-error {
   font-size: 11.5px;
   color: var(--error);
