@@ -354,12 +354,21 @@ function fqStatusLabel(status) {
 
 // Aggregate rollup of the server's own per-section statuses — not a new
 // scoring system, just a plain-language summary of data already computed.
+// Deliberately avoids "X of Y" ratio phrasing, which reads as a score even
+// when it isn't meant as one.
 function fqOverallHeadline(sections) {
   const counts = { strong: 0, attention: 0, focus: 0 };
   sections.forEach(s => counts[s.status]++);
-  if (counts.focus === 0 && counts.attention === 0) return 'Looking Strong Overall';
-  if (counts.focus > 0) return 'A Few Areas Worth Focusing On';
-  return 'Good Foundation, With Room to Build';
+  if (counts.focus === 0 && counts.attention === 0) return 'You\u2019re in a Strong Position';
+  if (counts.focus === 0) return 'A Solid Foundation Overall';
+  if (counts.strong === 0) return 'A Clear Starting Point';
+  return 'A Good Mix of Strengths and Opportunities';
+}
+
+function fqOverallSubtext(strongCount, needsWorkCount) {
+  if (needsWorkCount === 0) return "You're covering the fundamentals well \u2014 keep it up as you move forward.";
+  if (strongCount === 0) return "There's a good amount to build on together, and that's completely normal at this stage \u2014 here's where to begin.";
+  return "You're already doing well in several areas, and there are a few worth a bit more attention \u2014 nothing urgent, just things to keep in mind.";
 }
 
 function renderFqSuccess() {
@@ -391,6 +400,13 @@ function renderFqSuccess() {
 
   return `
     <div class="fq-success-wrap fq-print-area">
+      <div class="fq-print-only fq-print-header">
+        <img src="images/badges/obgyn-coe.jpg" alt="Dr. Puja's Clinic — OBGYN Centre of Excellence" width="48" height="48">
+        <div>
+          <div class="fq-print-clinic-name">Dr. Puja's Clinic</div>
+          <div class="fq-print-clinic-sub">Gynaecology &amp; Fertility Centre</div>
+        </div>
+      </div>
       <div class="fq-success-tick fq-no-print" aria-hidden="true">\u2705</div>
       <h3>Thank You \u2014 Here's Your Summary</h3>
       <p class="fq-intro">This is a self-check, not a test result. Use it as a starting point for your own conversation
@@ -398,7 +414,7 @@ function renderFqSuccess() {
 
       <div class="fq-result-row" style="background:var(--teal-ghost);border-color:transparent;">
         <div class="fq-result-head"><span style="font-size:15px;">${escapeHTML(overall)}</span></div>
-        <p>${strong.length} of ${r.section_summary.length} areas already look strong${needsWork.length ? `, and ${needsWork.length} are worth a closer look` : ''}.</p>
+        <p>${escapeHTML(fqOverallSubtext(strong.length, needsWork.length))}</p>
       </div>
 
       ${redFlagBanner}
@@ -411,6 +427,7 @@ function renderFqSuccess() {
         <button class="bw-primary-btn" style="flex:1;margin:0;" onclick="closeFertilityQuestionnaire();openBooking();">Book Appointment</button>
       </div>
       <button class="bw-done-btn fq-no-print" style="width:100%;margin-top:10px;" onclick="closeFertilityQuestionnaire()">Done</button>
+      <p class="fq-print-only fq-print-copyright">© 2026 Dr. Puja's Clinic. All rights reserved. This is copyrighted material.</p>
     </div>
   `;
 }

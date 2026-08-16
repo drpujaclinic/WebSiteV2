@@ -3196,6 +3196,43 @@ textarea {
     width: 100%;
   }
   .fq-no-print { display: none !important; }
+  .fq-print-only { display: flex !important; }
+}
+.fq-print-only {
+  display: none;
+}
+.fq-print-header {
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--ivory-dark);
+}
+.fq-print-header img {
+  border-radius: 8px;
+}
+.fq-print-clinic-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+  text-align: left;
+}
+.fq-print-clinic-sub {
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+}
+.fq-print-copyright {
+  font-size: 10px;
+  color: var(--ink-faint);
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ivory-dark);
 }
 
 /* Privacy assurance bullet — deliberately its own line, directly under the
@@ -3544,8 +3581,8 @@ textarea {
   white-space: nowrap;
 }
 .fq-status-strong { background: var(--sage-pale); color: var(--sage); }
-.fq-status-attention { background: var(--gold-pale); color: var(--gold); }
-.fq-status-focus { background: var(--teal-ghost); color: var(--teal); }
+.fq-status-attention { background: var(--teal-ghost); color: var(--teal); }
+.fq-status-focus { background: var(--gold-pale); color: #8a6a1f; border: 1px solid rgba(184, 146, 42, 0.3); }
 
 /* ── SOCIAL PROOF — reuses .testimonial-quote (existing decorative mark) ── */
 .fc-testimonial-card {
