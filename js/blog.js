@@ -209,9 +209,35 @@ function blogRenderBlock(block) {
   if (!block || !block.type) return '';
   const text = escapeHTML(block.text || '');
   switch (block.type) {
-    case 'heading':   return `<h2>${text}</h2>`;
-    case 'paragraph': return `<p>${text}</p>`;
-    default:          return `<p>${text}</p>`;
+    case 'heading':
+      return `<h2>${text}</h2>`;
+    case 'paragraph':
+      return `<p>${text}</p>`;
+    case 'list': {
+      const tag = block.style === 'ordered' ? 'ol' : 'ul';
+      const items = Array.isArray(block.items) ? block.items : [];
+      return `<${tag} class="blog-content-list">${items.map(i => `<li>${escapeHTML(i)}</li>`).join('')}</${tag}>`;
+    }
+    case 'image': {
+      if (!block.src) return '';
+      const src = `images/blog/${block.src}`.replace(/\/{2,}/g, '/');
+      const alt = escapeHTML(block.alt || '');
+      const caption = block.caption ? `<figcaption>${escapeHTML(block.caption)}</figcaption>` : '';
+      return `<figure class="blog-content-image"><img src="${src}" alt="${alt}" loading="lazy" decoding="async">${caption}</figure>`;
+    }
+    case 'quote': {
+      const attribution = block.attribution ? `<cite>${escapeHTML(block.attribution)}</cite>` : '';
+      return `<blockquote class="blog-content-quote"><p>${text}</p>${attribution}</blockquote>`;
+    }
+    case 'callout': {
+      const tone = block.tone === 'warning' ? 'warning' : 'info';
+      return `<div class="blog-content-callout blog-content-callout-${tone}">${text}</div>`;
+    }
+    default:
+      // Unknown/future block type — skip silently rather than rendering a
+      // misleading empty paragraph. A missing block is at least honestly
+      // missing; an empty <p></p> looks like a content bug.
+      return '';
   }
 }
 
