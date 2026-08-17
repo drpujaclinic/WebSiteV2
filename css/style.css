@@ -3189,12 +3189,32 @@ textarea {
 @media print {
   body * { visibility: hidden; }
   .fq-print-area, .fq-print-area * { visibility: visible; }
+
+  /* The print area lives inside #fqOverlay (position:fixed) > #fqSheet
+     (position:relative, overflow:hidden, capped max-height) > .fq-body.
+     Without resetting this whole chain, the absolutely-positioned print
+     area gets clipped by the sheet's own fixed-height box instead of
+     flowing naturally across as many printed pages as it needs. */
+  #fqOverlay, #fqSheet, .fq-body {
+    position: static !important;
+    display: block !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
   .fq-print-area {
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: static;
     width: 100%;
   }
+
   .fq-no-print { display: none !important; }
   .fq-print-only { display: flex !important; }
 }
