@@ -1,8 +1,14 @@
 /**
  * DR. PUJA'S CLINIC — blog.js
  * Dynamic Blog listing (featured + paginated grid + category filter) and
- * article detail rendering. Depends on: booking.js (bwApi, escapeHTML),
- * main.js (showBlogArticle — routing lives there, not here).
+ * article detail rendering. Depends on: booking.js (bwApi, escapeHTML,
+ * showNotification, openBooking), main.js (showBlogArticle — routing lives
+ * there, not here), chat.js (openChat).
+ *
+ * Every function/signature that existed before this revision is unchanged
+ * — main.js and index.html call several of these directly by name
+ * (blogInit, blogLoadMore, blogFilterByCategory, blogClearFilter,
+ * blogLoadArticleDetail). New capability is additive only.
  */
 'use strict';
 
@@ -70,7 +76,6 @@ async function blogLoadFeatured() {
   }
 }
 
-// ADD this new function:
 async function blogLoadCategoryCounts() {
   try {
     const res = await bwApi('/blog/categories');
@@ -104,8 +109,6 @@ async function blogLoadArticles(append = false) {
 
     const res = await bwApi(`/blog/articles?${params.toString()}`);
 
-    // Any unexpected response shape falls through to the error state below —
-    // never leave the "Loading…" placeholder as a possible end state.
     if (!res || !res.success || !Array.isArray(res.articles)) {
       if (grid) grid.innerHTML = `<p class="blog-load-error">Could not load articles right now. Please try again shortly.</p>`;
       if (loadMoreBtn) loadMoreBtn.style.display = 'none';
@@ -117,12 +120,9 @@ async function blogLoadArticles(append = false) {
 
     if (grid) {
       if (res.articles.length === 0) {
-        // Covers BOTH "no articles anywhere yet" and "no articles in this
-        // category" — same element, message adapts based on active filter.
         if (!append) {
           grid.innerHTML = `<p class="blog-no-articles">No articles ${blogState.category ? 'in this category ' : ''}yet — check back soon.</p>`;
         }
-        // if append and 0 results: nothing new to add, leave existing cards as-is
       } else {
         const html = res.articles.map(blogArticleCardHTML).join('');
         if (append) grid.insertAdjacentHTML('beforeend', html);
@@ -139,10 +139,6 @@ async function blogLoadArticles(append = false) {
     if (grid) grid.innerHTML = `<p class="blog-load-error">Something went wrong loading articles. Please try again shortly.</p>`;
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
   } finally {
-    // CRITICAL: must always reset, even on exception — otherwise every
-    // future call (filter clicks, load-more) silently no-ops forever
-    // against the `if (blogState.loading) return;` guard above. This was
-    // the likely root cause of "filter buttons do nothing".
     blogState.loading = false;
   }
 }
@@ -152,11 +148,9 @@ function blogLoadMore() {
   blogLoadArticles(true);
 }
 
-// ── LISTING: category filter (wired via delegated click listener below,
-//    not inline onclick — see bottom of file) ──────────────────────────────
 function blogFilterByCategory(slug, name) {
   if (!slug) return;
-  blogState.category = blogState.category === slug ? null : slug; // click active category again to clear
+  blogState.category = blogState.category === slug ? null : slug;
   blogState.page = 1;
   blogRenderActiveFilterBadge(name);
   blogLoadArticles();
@@ -181,9 +175,6 @@ function blogRenderActiveFilterBadge(name) {
     </span>`;
 }
 
-// Delegated listener — survives even if a button's markup gets copy-pasted
-// wrong, since it only depends on the CSS class + data attributes, not on
-// a hand-typed inline onclick string per button.
 document.addEventListener('click', function (e) {
   const btn = e.target.closest('.blog-category-filter-btn');
   if (!btn) return;
@@ -198,24 +189,82 @@ function blogInit() {
   blogRenderActiveFilterBadge();
   blogLoadFeatured();
   blogLoadArticles();
-  blogLoadCategoryCounts();   // ← new
+  blogLoadCategoryCounts();
   blogState.initialized = true;
 }
 
+// ── ARTICLE DETAIL: content blocks ──────────────────────────────────────────
+// Internal-only link targets a "link" block may point to — mirrors the
+// backend's blogValidateLinkHref() allowlist exactly (see
+// backend/api/staff/blog-article-upsert.php). Any href a CMS author saved
+// already passed that same allowlist server-side; this is a defensive
+// second check on the render side, not the primary control.
+function blogIsSafeInternalHref(href) {
+  const fixed = ['#home', '#about', '#services', '#facilities', '#locations', '#blog', '#testimonials', '#contact', '#fertility-community'];
+  if (fixed.includes(href)) return true;
+  if (/^#blog\/[a-z0-9]+(-[a-z0-9]+)*$/.test(href)) return true;
+  if (/^tel:\+?[0-9]{7,15}$/.test(href)) return true;
+  if (/^files\/[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\.pdf$/.test(href)) return true;
+  return false;
+}
 
+function blogLinkClickHandler(href) {
+  if (href.startsWith('#blog/')) {
+    const slug = decodeURIComponent(href.slice(6));
+    return `showBlogArticle('${slug}');return false;`;
+  }
+  if (href.startsWith('#') && href !== '#blog') {
+    return `showPage('${href.slice(1)}');return false;`;
+  }
+  if (href === '#blog') {
+    return `showPage('blog');return false;`;
+  }
+  return ''; // tel: / files/*.pdf — let the browser handle it natively
+}
 
-// ── ARTICLE DETAIL ──────────────────────────────────────────────────────────
-function blogRenderBlock(block) {
+// Slugifies heading text into a stable, readable anchor id. Collisions
+// (two headings with identical text) get a numeric suffix so ids stay
+// unique within the article.
+function blogSlugifyHeading(text, usedSlugs) {
+  let base = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'section';
+  let slug = base;
+  let n = 2;
+  while (usedSlugs.has(slug)) { slug = `${base}-${n}`; n++; }
+  usedSlugs.add(slug);
+  return slug;
+}
+
+/**
+ * Renders one content block. Adds `link` and checklist-flagged `list`
+ * rendering, and a third callout tone ("action"), on top of the original
+ * heading/paragraph/list/image/quote/callout set. `headingSlugs` is an
+ * optional Set (heading blocks only) used to attach a stable anchor id for
+ * the "In This Article" TOC — omit it (as the old call sites do) and
+ * headings render exactly as before, with no id attribute.
+ */
+function blogRenderBlock(block, headingSlugs) {
   if (!block || !block.type) return '';
   const text = escapeHTML(block.text || '');
   switch (block.type) {
-    case 'heading':
-      return `<h2>${text}</h2>`;
+    case 'heading': {
+      const idAttr = headingSlugs ? ` id="${blogSlugifyHeading(block.text || '', headingSlugs)}"` : '';
+      return `<h2${idAttr}>${text}</h2>`;
+    }
     case 'paragraph':
       return `<p>${text}</p>`;
     case 'list': {
       const tag = block.style === 'ordered' ? 'ol' : 'ul';
       const items = Array.isArray(block.items) ? block.items : [];
+      if (block.checklist) {
+        const groupId = 'chk' + Math.random().toString(36).slice(2, 9);
+        return `<ul class="blog-checklist" role="list">${items.map((item, i) => {
+          const cbId = `${groupId}-${i}`;
+          return `<li class="blog-checklist-item">
+            <input type="checkbox" id="${cbId}" class="blog-checklist-checkbox">
+            <label for="${cbId}">${escapeHTML(item)}</label>
+          </li>`;
+        }).join('')}</ul>`;
+      }
       return `<${tag} class="blog-content-list">${items.map(i => `<li>${escapeHTML(i)}</li>`).join('')}</${tag}>`;
     }
     case 'image': {
@@ -230,17 +279,244 @@ function blogRenderBlock(block) {
       return `<blockquote class="blog-content-quote"><p>${text}</p>${attribution}</blockquote>`;
     }
     case 'callout': {
-      const tone = block.tone === 'warning' ? 'warning' : 'info';
-      return `<div class="blog-content-callout blog-content-callout-${tone}">${text}</div>`;
+      const tone = ['warning', 'action'].includes(block.tone) ? block.tone : 'info';
+      const icon = tone === 'warning' ? '⚠️' : tone === 'action' ? '✅' : 'ℹ️';
+      return `<div class="blog-content-callout blog-content-callout-${tone}"><span class="blog-callout-icon" aria-hidden="true">${icon}</span><div>${text}</div></div>`;
+    }
+    case 'link': {
+      if (!block.href || !blogIsSafeInternalHref(block.href)) return '';
+      const label = escapeHTML(block.label || block.href);
+      const onclick = blogLinkClickHandler(block.href);
+      const hrefAttr = block.href.startsWith('#') && !onclick.includes('showBlogArticle') && !onclick.includes('showPage') ? block.href : (block.href.startsWith('tel:') || block.href.endsWith('.pdf') ? block.href : '#');
+      const extra = block.href.endsWith('.pdf') ? ' target="_blank" rel="noopener noreferrer"' : '';
+      return `<p class="blog-content-link"><a href="${escapeHTML(block.href)}" ${onclick ? `onclick="${onclick}"` : ''}${extra}>${label} <span aria-hidden="true">→</span></a></p>`;
     }
     default:
-      // Unknown/future block type — skip silently rather than rendering a
-      // misleading empty paragraph. A missing block is at least honestly
-      // missing; an empty <p></p> looks like a content bug.
       return '';
   }
 }
 
+// ── ARTICLE DETAIL: "In This Article" TOC ───────────────────────────────────
+function blogBuildTOC(contentBlocks) {
+  const usedSlugs = new Set();
+  const entries = [];
+  contentBlocks.forEach(b => {
+    if (b.type === 'heading' && b.text) {
+      entries.push({ text: b.text, slug: blogSlugifyHeading(b.text, usedSlugs) });
+    }
+  });
+  return entries;
+}
+
+function blogRenderTOC(entries) {
+  if (entries.length < 3) return ''; // not worth a TOC for a short article
+  const items = entries.map(e => `<li><a href="#${e.slug}" onclick="blogScrollToHeading(event,'${e.slug}')">${escapeHTML(e.text)}</a></li>`).join('');
+  return `
+    <nav class="blog-toc" aria-label="Article sections">
+      <details open>
+        <summary>In This Article</summary>
+        <ol>${items}</ol>
+      </details>
+    </nav>`;
+}
+
+function blogScrollToHeading(e, slug) {
+  e.preventDefault();
+  const el = document.getElementById(slug);
+  if (!el) return;
+  const navHeight = 86; // clears the fixed site nav
+  const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
+  window.scrollTo({ top, behavior: 'smooth' });
+  history.replaceState(null, '', '#blog/' + (window.__blogCurrentSlug || '') + '#' + slug === '' ? '' : location.hash.split('#').slice(0, 2).join('#'));
+}
+
+// ── ARTICLE DETAIL: share bar ────────────────────────────────────────────
+function blogCanonicalUrl(article) {
+  if (article.seo && article.seo.canonical_url) {
+    return article.seo.canonical_url.startsWith('http')
+      ? article.seo.canonical_url
+      : 'https://drpujaprasad.in' + (article.seo.canonical_url.startsWith('/') ? '' : '/') + article.seo.canonical_url;
+  }
+  return `https://drpujaprasad.in/#blog/${encodeURIComponent(article.slug)}`;
+}
+
+function blogRenderShareBar(article) {
+  const url = blogCanonicalUrl(article);
+  const title = article.title;
+  const encodedUrl = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
+  return `
+    <div class="blog-share-bar" aria-label="Share this article">
+      <span class="blog-share-label">Share</span>
+      <a href="https://wa.me/?text=${encodedTitle}%20${encodedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp" class="blog-share-btn blog-share-wa">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487 2.981 1.287 2.981.858 3.52.804.538-.054 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+      </a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook" class="blog-share-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg>
+      </a>
+      <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn" class="blog-share-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.03-1.85-3.03-1.85 0-2.14 1.45-2.14 2.94v5.66H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.61 0 4.28 2.38 4.28 5.47v6.27zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>
+      </a>
+      <a href="https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}" target="_blank" rel="noopener noreferrer" aria-label="Share on X" class="blog-share-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M18.9 2H22l-7.6 8.7L23.3 22h-7l-5.5-7.2L4.5 22H1.4l8.1-9.3L1 2h7.2l5 6.6L18.9 2zm-1.2 18h1.7L7.4 3.9H5.6L17.7 20z"/></svg>
+      </a>
+      <button type="button" onclick="blogCopyLink('${escapeHTML(url).replace(/'/g, "\\'")}')" aria-label="Copy link" class="blog-share-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>
+      </button>
+      <button type="button" onclick="blogNativeShare('${escapeHTML(url).replace(/'/g, "\\'")}','${escapeHTML(title).replace(/'/g, "\\'")}')" class="blog-share-btn blog-share-native" aria-label="Share via device">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>
+      </button>
+    </div>`;
+}
+
+function blogCopyLink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    if (typeof showNotification === 'function') showNotification('Link Copied', 'The article link has been copied to your clipboard.');
+  }).catch(() => {
+    if (typeof showNotification === 'function') showNotification('Could Not Copy', 'Please copy the link from your browser address bar.');
+  });
+}
+
+function blogNativeShare(url, title) {
+  if (navigator.share) {
+    navigator.share({ title, url }).catch(() => {});
+  } else {
+    blogCopyLink(url);
+  }
+}
+
+// ── ARTICLE DETAIL: contextual CTAs ─────────────────────────────────────────
+function blogRenderEvaluationCTA() {
+  return `
+    <div class="blog-inline-cta">
+      <p>If any of this sounds familiar, it may be worth having it looked at directly.</p>
+      <button class="btn btn-primary btn-sm" onclick="openBooking()">📅 Book a Fertility Evaluation</button>
+    </div>`;
+}
+
+function blogRenderNextStepsCard() {
+  return `
+    <div class="blog-next-steps">
+      <h3>Next Steps</h3>
+      <div class="blog-next-steps-grid">
+        <button onclick="openChat()" class="blog-next-step-btn">
+          <span aria-hidden="true">💬</span>
+          <span>Ask the AI Assistant</span>
+        </button>
+        <button onclick="openBooking()" class="blog-next-step-btn">
+          <span aria-hidden="true">📅</span>
+          <span>Book Appointment</span>
+        </button>
+        <button onclick="showPage('fertility-community')" class="blog-next-step-btn">
+          <span aria-hidden="true">👥</span>
+          <span>Join Fertility Community</span>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ── ARTICLE DETAIL: "Was this helpful?" feedback ────────────────────────────
+function blogRenderFeedbackWidget(articleId) {
+  return `
+    <div class="blog-feedback" id="blogFeedback" data-article-id="${articleId}" data-submitted="0">
+      <div id="blogFeedbackQuestion">
+        <p>Was this article helpful?</p>
+        <div class="blog-feedback-actions">
+          <button onclick="blogSubmitFeedback('yes')" class="btn btn-outline btn-sm">Yes</button>
+          <button onclick="blogSubmitFeedback('not_sure')" class="btn btn-outline btn-sm">Not sure</button>
+        </div>
+      </div>
+      <div id="blogFeedbackThanks" style="display:none;">
+        <p>Thank you — that helps us improve this resource.</p>
+        <div id="blogFeedbackSuggestBox">
+          <label for="blogFeedbackSuggestion" style="display:block;font-size:12px;color:var(--ink-light);margin-bottom:6px;">Anything you'd like us to explain next? <span style="color:var(--ink-faint);">(optional, anonymous)</span></label>
+          <textarea id="blogFeedbackSuggestion" rows="2" maxlength="500" style="width:100%;font-size:13px;border:1.5px solid var(--ivory-dark);border-radius:8px;padding:8px 10px;"></textarea>
+          <button onclick="blogSubmitFeedbackSuggestion()" class="btn btn-outline btn-sm" style="margin-top:8px;">Send</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function blogSubmitFeedback(helpful) {
+  const wrap = document.getElementById('blogFeedback');
+  if (!wrap || wrap.dataset.submitted === '1') return;
+  wrap.dataset.submitted = '1';
+  document.getElementById('blogFeedbackQuestion').style.display = 'none';
+  document.getElementById('blogFeedbackThanks').style.display = 'block';
+
+  const articleId = parseInt(wrap.dataset.articleId, 10);
+  try {
+    await fetch('/api/submit-blog-feedback.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      body: JSON.stringify({ article_id: articleId, helpful }),
+    });
+  } catch (err) { /* best-effort — the reader has already seen their thanks message */ }
+}
+
+async function blogSubmitFeedbackSuggestion() {
+  const wrap = document.getElementById('blogFeedback');
+  const box = document.getElementById('blogFeedbackSuggestBox');
+  const textarea = document.getElementById('blogFeedbackSuggestion');
+  const suggestion = textarea.value.trim();
+  if (!suggestion) { box.style.display = 'none'; return; }
+
+  const articleId = parseInt(wrap.dataset.articleId, 10);
+  try {
+    await fetch('/api/submit-blog-feedback.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      body: JSON.stringify({ article_id: articleId, helpful: 'yes', suggestion }),
+    });
+  } catch (err) { /* best-effort */ }
+  box.innerHTML = '<p style="font-size:12px;color:var(--ink-light);">Thanks — we read every suggestion.</p>';
+}
+
+// ── ARTICLE DETAIL: structured data ─────────────────────────────────────────
+function blogInjectStructuredData(article) {
+  document.getElementById('blogArticleJsonLd')?.remove();
+
+  const url = blogCanonicalUrl(article);
+  const graph = [{
+    '@type': 'MedicalWebPage',
+    '@id': url + '#webpage',
+    url,
+    name: article.title,
+    description: (article.seo && article.seo.meta_description) || article.summary,
+    lastReviewed: article.last_medical_review_at || undefined,
+    datePublished: article.published_at || undefined,
+    author: { '@type': 'Person', name: article.author.name, honorificSuffix: article.author.credentials || undefined },
+    reviewedBy: article.reviewer ? { '@type': 'Person', name: article.reviewer.name, honorificSuffix: article.reviewer.credentials || undefined } : undefined,
+    publisher: { '@type': 'MedicalOrganization', name: "Dr. Puja's Clinic", url: 'https://drpujaprasad.in' },
+  }];
+
+  if (Array.isArray(article.faqs) && article.faqs.length > 0) {
+    graph.push({
+      '@type': 'FAQPage',
+      mainEntity: article.faqs.map(f => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: (f.answer || []).filter(b => b.type === 'paragraph' || b.type === 'heading').map(b => b.text).join(' '),
+        },
+      })),
+    });
+  }
+
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.id = 'blogArticleJsonLd';
+  // JSON.stringify already drops `undefined` values, so optional fields
+  // above (lastReviewed, reviewedBy, etc.) simply vanish rather than
+  // emitting the literal string "undefined" into the graph.
+  script.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
+  document.head.appendChild(script);
+}
+
+// ── ARTICLE DETAIL: main render ─────────────────────────────────────────────
 async function blogLoadArticleDetail(slug) {
   const body            = document.getElementById('blogArticleBody');
   const heroTitle        = document.getElementById('blogArticleHeroTitle');
@@ -252,6 +528,7 @@ async function blogLoadArticleDetail(slug) {
   if (heroTitle) heroTitle.innerHTML = `<em>Loading…</em>`;
   if (heroMeta) heroMeta.textContent = '';
   if (breadcrumbTitle) breadcrumbTitle.textContent = '…';
+  document.getElementById('blogArticleJsonLd')?.remove();
 
   try {
     const res = await bwApi(`/blog/articles/${encodeURIComponent(slug)}`);
@@ -268,6 +545,7 @@ async function blogLoadArticleDetail(slug) {
     }
 
     const a = res.article;
+    window.__blogCurrentSlug = a.slug;
 
     if (heroTitle) heroTitle.innerHTML = escapeHTML(a.title);
     const reviewedLabel = a.last_medical_review_at
@@ -286,7 +564,19 @@ async function blogLoadArticleDetail(slug) {
     const metaDescEl = document.querySelector('meta[name="description"]');
     if (metaDescEl) metaDescEl.setAttribute('content', (a.seo && a.seo.meta_description) || a.summary);
 
-    const contentHTML = (a.content || []).map(blogRenderBlock).join('');
+    const contentBlocks = a.content || [];
+    const headingSlugs = new Set();
+    const contentHTML = contentBlocks.map(b => blogRenderBlock(b, headingSlugs)).join('');
+    const toc = blogRenderTOC(blogBuildTOC(contentBlocks));
+    const hasChecklist = contentBlocks.some(b => b.type === 'list' && b.checklist);
+    const hasWarningCallout = contentBlocks.some(b => b.type === 'callout' && b.tone === 'warning');
+
+    const checklistCTA = hasChecklist ? `
+      <div class="blog-checklist-cta">
+        <a href="files/couple-fertility-checklist.pdf" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">📋 Download Printable Checklist (PDF)</a>
+      </div>` : '';
+
+    const evaluationCTA = hasWarningCallout ? blogRenderEvaluationCTA() : '';
 
     const faqHTML = (a.faqs && a.faqs.length) ? `
       <h2 style="margin-top:48px;">Frequently Asked Questions</h2>
@@ -294,7 +584,7 @@ async function blogLoadArticleDetail(slug) {
         ${a.faqs.map(f => `
           <details class="blog-faq-item">
             <summary>${escapeHTML(f.question)}</summary>
-            <div>${(f.answer || []).map(blogRenderBlock).join('')}</div>
+            <div>${(f.answer || []).map(b => blogRenderBlock(b)).join('')}</div>
           </details>`).join('')}
       </div>` : '';
 
@@ -317,10 +607,18 @@ async function blogLoadArticleDetail(slug) {
 
     body.innerHTML = `
       <div class="blog-tag">${escapeHTML(a.category.name)}</div>
+      ${blogRenderShareBar(a)}
+      ${toc}
       <div class="blog-article-content">${contentHTML}</div>
+      ${checklistCTA}
+      ${evaluationCTA}
       ${relatedHTML}
       ${faqHTML}
+      ${blogRenderFeedbackWidget(a.id)}
+      ${blogRenderNextStepsCard()}
     `;
+
+    blogInjectStructuredData(a);
   } catch (err) {
     body.innerHTML = `<p class="blog-load-error">Something went wrong loading this article. Please try again shortly.</p>`;
     if (heroTitle) heroTitle.textContent = 'Error';
