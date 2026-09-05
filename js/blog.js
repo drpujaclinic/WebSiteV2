@@ -275,7 +275,7 @@ function blogRenderBlock(block, headingSlugs) {
       return `<figure class="blog-content-image"><img src="${src}" alt="${alt}" loading="lazy" decoding="async">${caption}</figure>`;
     }
     case 'quote': {
-      const attribution = block.attribution ? `<cite>${escapeHTML(block.attribution)}</cite>` : '';
+      const attribution = block.attribution ? `${escapeHTML(block.attribution)}` : '';
       return `<blockquote class="blog-content-quote"><p>${text}</p>${attribution}</blockquote>`;
     }
     case 'callout': {
@@ -308,26 +308,26 @@ function blogBuildTOC(contentBlocks) {
   return entries;
 }
 
+// Renders as plain native anchor links — no onclick/JS at all. Smooth
+// scrolling and nav-clearance come entirely from CSS (global
+// `scroll-behavior: smooth` on <html>, plus `scroll-margin-top` on
+// `.blog-article-content h2`), so the browser's own anchor-jump handles
+// everything correctly with zero custom routing logic to conflict with
+// main.js's hash-based page router. Numbers are rendered manually on a
+// plain <ul> (list-style:none) rather than a native <ol> counter, which
+// combined with flex layout produced duplicated markers across browsers.
 function blogRenderTOC(entries) {
   if (entries.length < 3) return ''; // not worth a TOC for a short article
-  const items = entries.map(e => `<li><a href="#${e.slug}" onclick="blogScrollToHeading(event,'${e.slug}')">${escapeHTML(e.text)}</a></li>`).join('');
+  const items = entries.map((e, i) =>
+    `<li><a href="#${e.slug}"><span class="blog-toc-num" aria-hidden="true">${i + 1}.</span>${escapeHTML(e.text)}</a></li>`
+  ).join('');
   return `
     <nav class="blog-toc" aria-label="Article sections">
-      <details open>
-        <summary>In This Article</summary>
-        <ol>${items}</ol>
+      <details>
+        <summary>In This Article <svg class="blog-toc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary>
+        <ul>${items}</ul>
       </details>
     </nav>`;
-}
-
-function blogScrollToHeading(e, slug) {
-  e.preventDefault();
-  const el = document.getElementById(slug);
-  if (!el) return;
-  const navHeight = 86; // clears the fixed site nav
-  const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
-  window.scrollTo({ top, behavior: 'smooth' });
-  history.replaceState(null, '', '#blog/' + (window.__blogCurrentSlug || '') + '#' + slug === '' ? '' : location.hash.split('#').slice(0, 2).join('#'));
 }
 
 // ── ARTICLE DETAIL: share bar ────────────────────────────────────────────
