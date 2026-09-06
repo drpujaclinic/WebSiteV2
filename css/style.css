@@ -4101,20 +4101,21 @@ body.dpc-consent-visible .whatsapp-float {
   flex-direction: column;
   gap: 8px;
 }
-.blog-toc ul li a {
+.blog-toc-link {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  font: inherit;
   font-size: var(--text-sm);
   color: var(--ink-mid);
-  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
 }
-.blog-toc ul li a:hover { color: var(--teal); text-decoration: underline; }
-.blog-toc-num {
-  color: var(--teal);
-  font-weight: 700;
-  flex-shrink: 0;
-}
+.blog-toc-link:hover { color: var(--teal); text-decoration: underline; }
 
 @media (prefers-reduced-motion: reduce) {
   .blog-toc-chevron { transition: none; }

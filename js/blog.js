@@ -308,24 +308,25 @@ function blogBuildTOC(contentBlocks) {
   return entries;
 }
 
-// Renders as plain native anchor links — no onclick/JS at all. Smooth
-// scrolling and nav-clearance come entirely from CSS (global
-// `scroll-behavior: smooth` on <html>, plus `scroll-margin-top` on
-// `.blog-article-content h2`), so the browser's own anchor-jump handles
-// everything correctly with zero custom routing logic to conflict with
-// main.js's hash-based page router. Numbers are rendered manually on a
-// plain <ul> (list-style:none) rather than a native <ol> counter, which
-// combined with flex layout produced duplicated markers across browsers.
+// Renders as buttons, not anchor links — deliberately never touches
+// location.hash or the History API. Two prior attempts using
+// <a href="#slug"> still triggered unexpected page/category content
+// appearing after a click, meaning something in this hash-routed SPA
+// reacts to hash changes in a way not fully accounted for. A button with
+// scrollIntoView() cannot trigger that class of bug at all, because it
+// never changes the URL. list-style is set inline (not just in the
+// stylesheet) so no external CSS rule, however it cascades, can
+// reintroduce a native marker alongside the manual number.
 function blogRenderTOC(entries) {
-  if (entries.length < 3) return ''; // not worth a TOC for a short article
+  if (entries.length < 3) return '';
   const items = entries.map((e, i) =>
-    `<li><a href="#${e.slug}"><span class="blog-toc-num" aria-hidden="true">${i + 1}.</span>${escapeHTML(e.text)}</a></li>`
+    `<li style="list-style:none;"><button type="button" class="blog-toc-link" onclick="blogScrollToHeadingSafe('${e.slug}')"><span class="blog-toc-num" aria-hidden="true">${i + 1}.</span>${escapeHTML(e.text)}</button></li>`
   ).join('');
   return `
     <nav class="blog-toc" aria-label="Article sections">
       <details>
         <summary>In This Article <svg class="blog-toc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary>
-        <ul>${items}</ul>
+        <ul style="list-style:none;margin:0;padding:0;">${items}</ul>
       </details>
     </nav>`;
 }
