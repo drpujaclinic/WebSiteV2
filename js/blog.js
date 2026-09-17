@@ -176,10 +176,17 @@ function blogRenderActiveFilterBadge(name) {
 }
 
 document.addEventListener('click', function (e) {
-  const btn = e.target.closest('.blog-category-filter-btn');
-  if (!btn) return;
-  e.preventDefault();
-  blogFilterByCategory(btn.dataset.categorySlug, btn.dataset.categoryName);
+  const catBtn = e.target.closest('.blog-category-filter-btn');
+  if (catBtn) {
+    e.preventDefault();
+    blogFilterByCategory(catBtn.dataset.categorySlug, catBtn.dataset.categoryName);
+    return;
+  }
+  const tocBtn = e.target.closest('.blog-toc-link');
+  if (tocBtn) {
+    const el = document.getElementById(tocBtn.dataset.tocTarget);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 });
 
 function blogInit() {
@@ -319,8 +326,8 @@ function blogBuildTOC(contentBlocks) {
 // reintroduce a native marker alongside the manual number.
 function blogRenderTOC(entries) {
   if (entries.length < 3) return '';
-  const items = entries.map((e, i) =>
-    `<li style="list-style:none;"><button type="button" class="blog-toc-link" onclick="blogScrollToHeadingSafe('${e.slug}')"><span class="blog-toc-num" aria-hidden="true">${i + 1}.</span>${escapeHTML(e.text)}</button></li>`
+  const items = entries.map(e =>
+    `<li style="list-style:none;"><button type="button" class="blog-toc-link" data-toc-target="${e.slug}"><span class="blog-toc-bullet" aria-hidden="true">•</span>${escapeHTML(e.text)}</button></li>`
   ).join('');
   return `
     <nav class="blog-toc" aria-label="Article sections">

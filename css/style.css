@@ -3805,51 +3805,6 @@ body.dpc-consent-visible .whatsapp-float {
   line-height: 1.75;
 }
 
-/* ── "In This Article" TOC ─────────────────────────────────────────── */
-.blog-toc {
-  background: var(--teal-ghost);
-  border: 1px solid rgba(31, 122, 140, 0.15);
-  border-radius: var(--r-md);
-  padding: var(--space-4) var(--space-5);
-  margin-bottom: var(--space-8);
-}
-.blog-toc summary {
-  cursor: pointer;
-  list-style: none;
-  font-weight: 700;
-  font-size: var(--text-sm);
-  color: var(--teal);
-  letter-spacing: 0.02em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.blog-toc summary::-webkit-details-marker { display: none; }
-.blog-toc summary::before {
-  content: '≡';
-  font-size: 15px;
-}
-.blog-toc ol {
-  list-style: decimal;
-  margin: var(--space-3) 0 0 var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.blog-toc ol li a {
-  font-size: var(--text-sm);
-  color: var(--ink-mid);
-  text-decoration: none;
-}
-.blog-toc ol li a:hover { color: var(--teal); text-decoration: underline; }
-
-@media (min-width: 1024px) {
-  .blog-toc {
-    position: sticky;
-    top: 86px;
-    z-index: 5;
-  }
-}
 
 /* ── Share bar ──────────────────────────────────────────────────────── */
 .blog-share-bar {
@@ -4115,7 +4070,14 @@ body.dpc-consent-visible .whatsapp-float {
   cursor: pointer;
   width: 100%;
 }
-.blog-toc-link:hover { color: var(--teal); text-decoration: underline; }
+.blog-toc-link:hover { 
+  color: var(--teal); 
+  text-decoration: underline; }
+
+.blog-toc-bullet { 
+  color: var(--teal); 
+  flex-shrink: 0; 
+}
 
 @media (prefers-reduced-motion: reduce) {
   .blog-toc-chevron { transition: none; }
